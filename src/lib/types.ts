@@ -6,6 +6,7 @@ export type CanvaTemplateType = 'lifestyle' | 'infographic' | 'aspirational' | '
 
 export interface ClaudeOutput {
   tipe: ContentType;
+  product_category: string;
   analysis: {
     pain_points: string;
     psychological_motive: string;

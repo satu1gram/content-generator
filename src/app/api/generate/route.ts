@@ -66,7 +66,8 @@ export async function POST(req: Request) {
           style_notes: parsedData.image_prompt?.style_notes || '',
           negative_prompt: parsedData.image_prompt?.negative_prompt || 'text, watermark, logo, blurry'
         },
-        canva_template_type: parsedData.canva_template_type || 'lifestyle'
+        canva_template_type: parsedData.canva_template_type || 'lifestyle',
+        visual_theme: parsedData.visual_theme
       };
 
       // Fallback slides if Gemini failed to provide array

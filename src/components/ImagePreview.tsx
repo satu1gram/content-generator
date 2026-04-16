@@ -100,8 +100,7 @@ const ImagePreview = ({ image_url, data }: ImagePreviewProps) => {
 
             {/* Post Image Carousel */}
             <div className={`relative bg-white/5 overflow-hidden flex items-center justify-center ${
-              data.post_format === 'story' ? 'aspect-[9/16]' : 
-              data.post_format === 'portrait' ? 'aspect-[4/5]' : 'aspect-square'
+              (data.post_format === 'story' || data.post_format === 'reels') ? 'aspect-[9/16]' : 'aspect-square'
             }`}>
               <AnimatePresence mode="wait">
                 {images.length > 0 ? (

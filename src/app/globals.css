@@ -1,0 +1,87 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bp-bg-page:       #F4F4F6;
+  --bp-bg-surface:    #FFFFFF;
+  --bp-bg-inner:      #F9F9FB;
+  --bp-bg-hover:      #F0EFFE;
+  --bp-border:        rgba(0,0,0,0.07);
+  --bp-border-strong: rgba(0,0,0,0.13);
+  --bp-text-primary:   #0D0D12;
+  --bp-text-secondary: #6B6B80;
+  --bp-text-muted:     #A0A0B0;
+  --bp-text-placeholder: #C0C0CF;
+  --bp-accent:         #7C6FF7;
+  --bp-accent-light:   #EAE8FE;
+  --bp-accent-hover:   #6B5EE6;
+  --bp-teal:   #3EC9A7; --bp-teal-bg:   #E0F7F1;
+  --bp-blue:   #60A5FA; --bp-blue-bg:   #EFF6FF;
+  --bp-amber:  #F59E0B; --bp-amber-bg:  #FFFBEB;
+  --bp-red:    #EF4444; --bp-red-bg:    #FEF2F2;
+  --bp-green:  #22C55E; --bp-green-bg:  #F0FDF4;
+  --bp-radius-xs:   6px;
+  --bp-radius-sm:   8px;
+  --bp-radius-md:   12px;
+  --bp-radius-lg:   16px;
+  --bp-radius-xl:   20px;
+  --bp-radius-full: 9999px;
+  --bp-shadow-sm: 0 1px 4px rgba(0,0,0,0.04);
+  --bp-shadow-md: 0 2px 16px rgba(0,0,0,0.06);
+  --bp-transition: all 0.15s ease;
+}
+
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: var(--bp-bg-page);
+  color: var(--bp-text-primary);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Base Styles */
+@layer base {
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-semibold tracking-tight;
+    color: var(--bp-text-primary);
+  }
+}
+
+/* Custom Scrollbar - Weightless Style */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.1);
+  border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0,0,0,0.2);
+}
+
+/* Utility Classes */
+.border-thin {
+  border-width: 0.5px;
+  border-color: var(--bp-border);
+}
+
+.bg-surface { background-color: var(--bp-bg-surface); }
+.bg-inner { background-color: var(--bp-bg-inner); }
+
+@keyframes orb-pulse { 
+  0%, 100% { opacity: 0.85; transform: scale(1); } 
+  50% { opacity: 1; transform: scale(1.05); } 
+}
+
+.ai-orb-anim {
+  animation: orb-pulse 3s ease-in-out infinite;
+}

@@ -1,0 +1,194 @@
+{
+  "business_name": "British Propolis (BP)",
+  "philosophy": "Inclusive (use 'Kita'), Soft-selling, Storytelling, Value-first",
+  "products": [
+    {
+      "id": "bp-regular",
+      "name": "British Propolis (Reguler)",
+      "category": "Suplemen",
+      "price": 250000,
+      "partner_prices": {
+        "reseller": 216000,
+        "agen": 198000,
+        "agen_plus": 180000
+      },
+      "benefits": [
+        "Imunitas & Pemulihan Ekstra",
+        "Antibakteri & Antioksidan murni",
+        "Mempercepat pemulihan tubuh yang drop",
+        "Imunitas kuat tanpa efek samping",
+        "Kaya flavonoid (Antioksidan tinggi)"
+      ],
+      "specs": "6 ML, Botol Kaca",
+      "bpom": "TR183610771"
+    },
+    {
+      "id": "bp-green",
+      "name": "British Propolis Green",
+      "category": "Suplemen Anak",
+      "price": 250000,
+      "partner_prices": {
+        "reseller": 216000,
+        "agen": 198000,
+        "agen_plus": 180000
+      },
+      "benefits": [
+        "Perisai Imunitas Si Kecil",
+        "Meningkatkan nafsu makan & berat badan",
+        "Mendukung kecerdasan & daya ingat",
+        "Melindungi dari virus/flu/sakit"
+      ],
+      "specs": "6 ML, Usia 1-12 Th, Madu Trigona",
+      "bpom": "TR193631981"
+    },
+    {
+      "id": "bp-blue",
+      "name": "British Propolis Blue",
+      "category": "Suplemen Wanita",
+      "price": 250000,
+      "partner_prices": {
+        "reseller": 216000,
+        "agen": 198000,
+        "agen_plus": 180000
+      },
+      "benefits": [
+        "Solusi Nyeri Haid & Hormon",
+        "Meredakan nyeri haid & kram perut",
+        "Melancarkan siklus datang bulan",
+        "Menjaga keseimbangan hormonal & imunitas"
+      ],
+      "specs": "6 ML, Varian Premium Khusus Wanita"
+    },
+    {
+      "id": "brassic-pro",
+      "name": "Brassic Pro",
+      "category": "Suplemen Sendi & Tidur",
+      "price": 250000,
+      "partner_prices": {
+        "reseller": 216000,
+        "agen": 198000,
+        "agen_plus": 180000
+      },
+      "benefits": [
+        "Bebas Nyeri Sendi & Insomnia",
+        "Meredakan pegal/linu/ linu",
+        "Menenangkan syaraf",
+        "Membantu tidur lelap berkualitas",
+        "Badan segar tak gampang penat"
+      ],
+      "specs": "40 Kapsul, Moringa + Echinacea",
+      "bpom": "TR203341281"
+    },
+    {
+      "id": "brassic-eye",
+      "name": "Brassic Eye",
+      "category": "Suplemen Mata",
+      "price": 250000,
+      "partner_prices": {
+        "reseller": 216000,
+        "agen": 198000,
+        "agen_plus": 180000
+      },
+      "benefits": [
+        "Perlindungan Mata Era Gadget",
+        "Menghilangkan penat pada mata lelah",
+        "Menjaga ketajaman penglihatan",
+        "Menyaring paparan Radiasi Biru layar"
+      ],
+      "specs": "40 Kapsul, Bilberry Extract",
+      "bpom": "TR203342441"
+    },
+    {
+      "id": "bp-norway",
+      "name": "BP Norway",
+      "category": "Suplemen Otak & Jantung",
+      "price": 250000,
+      "partner_prices": {
+        "reseller": 216000,
+        "agen": 198000,
+        "agen_plus": 180000
+      },
+      "benefits": [
+        "DHA Otak & Kesehatan Jantung",
+        "Meningkatkan fokus & respon mental",
+        "Nutrisi pembuluh darah & jantung",
+        "DHA tinggi bantu tumbuh kembang otak"
+      ],
+      "specs": "40 Soft Capsules, 100% Atlantic Salmon Oil",
+      "bpom": "TR233005481"
+    },
+    {
+      "id": "belgie-facial-wash",
+      "name": "Belgie Facial Wash",
+      "category": "Skincare Halal",
+      "price": 195000,
+      "partner_prices": {
+        "reseller": 195000,
+        "agen": 195000,
+        "agen_plus": 180000
+      },
+      "benefits": [
+        "Wajah Bersih Tanpa Ketarik",
+        "Melembabkan, tidak membuat kering",
+        "Bersihkan kotoran terdalam",
+        "Sensasi segar bercahaya"
+      ],
+      "specs": "100 ML, Propolis"
+    },
+    {
+      "id": "belgie-serum",
+      "name": "Belgie Anti Aging Serum",
+      "category": "Skincare Halal",
+      "price": 195000,
+      "partner_prices": {
+        "reseller": 195000,
+        "agen": 195000,
+        "agen_plus": 180000
+      },
+      "benefits": [
+        "Pudarkan Flek & Kerutan Cepat",
+        "Menyamarkan flek hitam membandel",
+        "Kurangi garis halus kerutan drastis",
+        "Kenyalkan kulit (Anti-Aging)"
+      ],
+      "specs": "10 ML, Collagen & Propolis"
+    },
+    {
+      "id": "belgie-day-cream",
+      "name": "Belgie Day Cream",
+      "category": "Skincare Halal",
+      "price": 195000,
+      "partner_prices": {
+        "reseller": 195000,
+        "agen": 195000,
+        "agen_plus": 180000
+      },
+      "benefits": [
+        "Perlindungan Siang Anti UV",
+        "Melindungi dari sinar UV (SPF 30+)",
+        "Melembabkan seharian penuh",
+        "Wajah tak mudah kusam di siang hari"
+      ],
+      "specs": "10 Gr, SPF 30+"
+    },
+    {
+      "id": "steffi-pro",
+      "name": "Steffi Pro",
+      "category": "Natural Sweetener",
+      "price": 195000,
+      "partner_prices": {
+        "reseller": 195000,
+        "agen": 195000,
+        "agen_plus": 180000
+      },
+      "benefits": [
+        "Manisnya Teh Tanpa Rasa Bersalah",
+        "Nol kalori, aman untuk diabetes/diet",
+        "Amankan lonjakan gula darah",
+        "Tidak ada rasa pahit (no aftertaste)"
+      ],
+      "specs": "30 ML, Stevia Extract",
+      "bpom": "MD 2728240015028"
+    }
+  ]
+}

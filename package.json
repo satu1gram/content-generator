@@ -4,13 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && mkdir -p dist && cp -r .next/* dist/",
+    "build": "next build && rm -rf dist && mkdir -p dist && cp -r .next/static dist/_next/static && cp -r public/* dist/ 2>/dev/null || true",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.88.0",
-    "@fal-ai/serverless-client": "^0.15.0",
+    "@fal-ai/client": "^1.9.5",
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.103.0",
     "@types/uuid": "^10.0.0",
@@ -24,6 +24,8 @@
     "uuid": "^13.0.0"
   },
   "devDependencies": {
+    "@cloudflare/next-on-pages": "^1.13.16",
+    "@cloudflare/workers-types": "^4.20260416.2",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^20",
     "@types/react": "^18",

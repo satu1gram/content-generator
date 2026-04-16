@@ -1,7 +1,5 @@
-import * as fal from "@fal-ai/serverless-client";
+import { fal } from "@fal-ai/client";
 import { NextResponse } from 'next/server';
-
-fal.config({ credentials: process.env.FAL_KEY });
 
 export async function POST(req: Request) {
   try {

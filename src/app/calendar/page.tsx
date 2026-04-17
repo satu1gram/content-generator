@@ -1,4 +1,3 @@
-export const runtime = 'edge';
 import { Calendar as CalendarIcon, Clock, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { ContentRecord } from '@/lib/types';

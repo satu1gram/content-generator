@@ -43,9 +43,17 @@ export const splitTextToSlides = (text: string): { title: string; body: string }
 export const fetchRepresentativeImage = async (query: string): Promise<string | null> => {
   const apiKey = process.env.PEXELS_API_KEY || "";
   let finalQuery = query.toLowerCase();
-  const humanKeywords = ['woman', 'person', 'people', 'girl', 'lady', 'man', 'boy', 'model'];
-  if (humanKeywords.some(k => finalQuery.includes(k)) && !finalQuery.includes('hijab') && !finalQuery.includes('muslim')) {
-    finalQuery += " hijab modest muslim";
+  const humanKeywords = ['woman', 'person', 'people', 'girl', 'lady', 'man', 'boy', 'model', 'human', 'patient'];
+  if (humanKeywords.some(k => finalQuery.includes(k))) {
+    if (!finalQuery.includes('hijab') && !finalQuery.includes('muslim') && !finalQuery.includes('man') && !finalQuery.includes('boy')) {
+      finalQuery += " hijab muslim modest";
+    }
+  } else {
+    // Jika query tidak spesifik tapi berpotensi memunculkan orang (misal: 'sick', 'tired')
+    const vibeKeywords = ['sick', 'tired', 'happy', 'sad', 'healthy', 'business', 'success'];
+    if (vibeKeywords.some(k => finalQuery.includes(k)) && !finalQuery.includes('hijab') && !finalQuery.includes('muslim')) {
+      finalQuery += " hijab muslim";
+    }
   }
   if (!apiKey) return null;
   try {
@@ -215,16 +223,39 @@ export const generateCarouselImages = async (
   const folderPath = `production/carousel_${timestamp}_${sessionId}`;
   const publicUrls: string[] = [];
 
-  // 🛡️ RUNTIME GUARD: Cloudflare Edge Runtime does not support Puppeteer
-  if (process.env.NEXT_RUNTIME === 'edge') {
-    console.error('❌ Carousel generation via Puppeteer is not supported in the Cloudflare Edge Runtime.');
-    throw new Error('Image generation is currently disabled on Cloudflare. Please use a Node.js compatible environment or remote browser API.');
+  let browser;
+
+  // 🛡️ ISOMORPHIC BROWSER BRIDGE
+  try {
+    const puppeteer = await import('puppeteer').then(m => m.default || m);
+    
+    // 🌐 Option A: Remote Browser (Cloudflare compatible)
+    if (process.env.BROWSERLESS_TOKEN) {
+      console.log('🌐 Connecting to Remote Browser (Browserless)...');
+      browser = await puppeteer.connect({
+        browserWSEndpoint: `wss://chrome.browserless.io?token=${process.env.BROWSERLESS_TOKEN}`,
+      });
+    } 
+    // 💻 Option B: Local Browser (Local Dev or Docker)
+    else {
+      console.log('💻 Launching Puppeteer...');
+      const launchOptions: any = { 
+        headless: true, 
+        args: ['--no-sandbox', '--disable-setuid-sandbox'] 
+      };
+      
+      // Jika di Docker (Koyeb), gunakan path executable yang sudah disiapkan
+      if (process.env.PUPPETEER_EXECUTABLE_PATH) {
+        console.log(`🐳 Using Docker Chrome path: ${process.env.PUPPETEER_EXECUTABLE_PATH}`);
+        launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
+      }
+
+      browser = await puppeteer.launch(launchOptions);
+    } 
+  } catch (error) {
+    console.warn('❌ Failed to initialize browser:', error);
+    return []; // Return early without crashing
   }
-
-  // Dynamic import to prevent Edge runtime from evaluating Node-specific code
-  const puppeteer = await import('puppeteer').then(m => m.default || m);
-
-  const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
   const page = await browser.newPage();
   await page.setViewport({ width: 1080, height: 1080 });
 

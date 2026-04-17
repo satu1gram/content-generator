@@ -1,7 +1,6 @@
-export const runtime = 'edge';
 import { NextResponse } from 'next/server';
-import genAI, { SYSTEM_PROMPT, GEMINI_MODEL } from '@/lib/gemini';
-import { generateCarouselImages, splitTextToSlides } from '@/lib/carousel-engine'; // Export check triggered - Sync ID: 887722
+import genAI, { SYSTEM_PROMPT, MODELS, generateWithFallback } from '@/lib/gemini';
+import { generateCarouselImages, splitTextToSlides } from '@/lib/carousel-engine';
 
 export async function POST(req: Request) {
   try {
@@ -19,18 +18,8 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
     }
 
-    // 2. Gemini API Call
-    const model = genAI.getGenerativeModel({ 
-      model: GEMINI_MODEL,
-      systemInstruction: SYSTEM_PROMPT,
-    });
-
-    const result = await model.generateContent({
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
-      generationConfig: {
-        responseMimeType: "application/json",
-      }
-    });
+    // 2. Resilient Gemini API Call
+    const result = await generateWithFallback(prompt);
 
     const response = await result.response;
     const content = response.text();

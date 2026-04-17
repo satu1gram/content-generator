@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build && rm -rf dist && mkdir -p dist && cp -r .next/static dist/_next/static && cp -r public/* dist/ 2>/dev/null || true",
+    "build": "next build && npx @cloudflare/next-on-pages",
     "start": "next start",
     "lint": "next lint"
   },

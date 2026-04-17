@@ -3,7 +3,14 @@ import productsData from './bp-knowledge.json';
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-export const GEMINI_MODEL = "gemini-flash-latest";
+export const MODELS = [
+  "gemini-1.5-flash", 
+  "gemini-1.5-flash-latest",
+  "gemini-1.5-pro-latest",
+  "gemini-1.5-pro"
+];
+
+export const GEMINI_MODEL = MODELS[0];
 
 export const SYSTEM_PROMPT = `
 Kamu adalah Ahli Strategi Konten Digital (AI Content Specialist) khusus untuk ekosistem British Propolis (BP) dan komunitas Quantum Millionaire.
@@ -74,5 +81,49 @@ PANDUAN WARNA BRAND (DETIL):
 7. STEFFI PRO (Sweetener): Primary #065F46 (Teal), Accent #34D399 (Mint), Text #FFFFFF.
 8. DEFAULT: Gunakan skema BP REGULAR.
 `;
+
+/**
+ * 🚀 HELPER: Generate content with automatic retries and model fallback
+ */
+export async function generateWithFallback(prompt: string, retryCount = 0) {
+  let lastError: any = null;
+  
+  for (const modelName of MODELS) {
+    try {
+      const model = genAI.getGenerativeModel({ 
+        model: modelName,
+        systemInstruction: SYSTEM_PROMPT,
+      });
+
+      const result = await model.generateContent({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          responseMimeType: "application/json",
+        }
+      });
+      
+      return result;
+    } catch (error: any) {
+      lastError = error;
+      // Jika error 503 (Busy), 429 (Rate Limit), atau 404 (Model Not Found), coba model berikutnya
+      if (error.status === 503 || error.status === 429 || error.status === 404) {
+        console.warn(`⚠️ Model ${modelName} bermasalah (Status: ${error.status}). Mencoba model berikutnya...`);
+        continue;
+      }
+      // Jika error lain, langsung lempar
+      throw error;
+    }
+  }
+
+  // Jika semua model gagal setelah iterasi pertama dan kita masih punya kuota retry
+  if (retryCount < 2 && (lastError?.status === 503 || lastError?.status === 429)) {
+    const delay = Math.pow(2, retryCount) * 1000;
+    console.log(`🔄 Semua model sibuk. Menunggu ${delay}ms sebelum mencoba lagi...`);
+    await new Promise(resolve => setTimeout(resolve, delay));
+    return generateWithFallback(prompt, retryCount + 1);
+  }
+
+  throw lastError;
+}
 
 export default genAI;

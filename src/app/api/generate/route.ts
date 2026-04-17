@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import genAI, { SYSTEM_PROMPT, GEMINI_MODEL } from '@/lib/gemini';
 import { generateCarouselImages, splitTextToSlides } from '@/lib/carousel-engine'; // Export check triggered - Sync ID: 887722

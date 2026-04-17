@@ -1,3 +1,4 @@
+export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import genAI, { GEMINI_MODEL } from '@/lib/gemini';
 

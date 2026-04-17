@@ -236,22 +236,19 @@ export const generateCarouselImages = async (
         browserWSEndpoint: `wss://chrome.browserless.io?token=${process.env.BROWSERLESS_TOKEN}`,
       });
     } 
-    // 💻 Option B: Local Browser (Local Dev or Docker)
-    else {
-      console.log('💻 Launching Puppeteer...');
-      const launchOptions: any = { 
+    // 💻 Option B: Local Browser (Local Dev only)
+    else if (process.env.NEXT_RUNTIME !== 'edge') {
+      console.log('💻 Launching Local Puppeteer...');
+      browser = await puppeteer.launch({ 
         headless: true, 
         args: ['--no-sandbox', '--disable-setuid-sandbox'] 
-      };
-      
-      // Jika di Docker (Koyeb), gunakan path executable yang sudah disiapkan
-      if (process.env.PUPPETEER_EXECUTABLE_PATH) {
-        console.log(`🐳 Using Docker Chrome path: ${process.env.PUPPETEER_EXECUTABLE_PATH}`);
-        launchOptions.executablePath = process.env.PUPPETEER_EXECUTABLE_PATH;
-      }
-
-      browser = await puppeteer.launch(launchOptions);
+      });
     } 
+    // ⚠️ Fallback: No browser available in this environment
+    else {
+      console.warn('⚠️ No browser available. Skipping image generation on Cloudflare Edge.');
+      return []; // Return early without crashing
+    }
   } catch (error) {
     console.warn('❌ Failed to initialize browser:', error);
     return []; // Return early without crashing

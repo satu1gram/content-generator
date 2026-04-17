@@ -1,6 +1,3 @@
-import puppeteer from 'puppeteer';
-import fs from 'fs-extra';
-import path from 'path';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -217,6 +214,15 @@ export const generateCarouselImages = async (
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const folderPath = `production/carousel_${timestamp}_${sessionId}`;
   const publicUrls: string[] = [];
+
+  // 🛡️ RUNTIME GUARD: Cloudflare Edge Runtime does not support Puppeteer
+  if (process.env.NEXT_RUNTIME === 'edge') {
+    console.error('❌ Carousel generation via Puppeteer is not supported in the Cloudflare Edge Runtime.');
+    throw new Error('Image generation is currently disabled on Cloudflare. Please use a Node.js compatible environment or remote browser API.');
+  }
+
+  // Dynamic import to prevent Edge runtime from evaluating Node-specific code
+  const puppeteer = await import('puppeteer').then(m => m.default || m);
 
   const browser = await puppeteer.launch({ headless: true, args: ['--no-sandbox', '--disable-setuid-sandbox'] });
   const page = await browser.newPage();

@@ -4,10 +4,11 @@ import productsData from './bp-knowledge.json';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export const MODELS = [
-  "gemini-1.5-flash", 
+  "gemini-pro",           // Model 1.0 yang paling stabil (Seringkali berhasil jika 1.5 gagal)
   "gemini-1.5-flash-latest",
-  "gemini-1.5-pro-latest",
-  "gemini-1.5-pro"
+  "gemini-1.5-flash",
+  "gemini-1.5-pro",
+  "gemini-flash-latest"   // Alias lama yang mungkin digunakan di v1beta
 ];
 
 export const GEMINI_MODEL = MODELS[0];

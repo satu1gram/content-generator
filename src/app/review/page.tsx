@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Check, Save, ArrowLeft, Loader2, Sparkles, Send } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ArrowLeft, Loader2, Sparkles, Send, Save, Check } from 'lucide-react';
 import ImagePicker from '@/components/ImagePicker';
 import ImagePreview from '@/components/ImagePreview';
 import CanvaExportButton from '@/components/CanvaExportButton';
+import CaptionBlock from '@/components/ui/CaptionBlock';
 import { ClaudeOutput } from '@/lib/types';
 import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
+import { getThemeConfig } from '@/lib/theme';
 
 export default function ReviewPage() {
   const [data, setData] = useState<ClaudeOutput | null>(null);
@@ -43,119 +44,141 @@ export default function ReviewPage() {
     } catch (error) { console.error('Save failed:', error); } finally { setIsSaving(false); }
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
-    alert('Script berhasil disalin! ✅');
-  };
-
   if (!data) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
-      <Loader2 className="w-8 h-8 animate-spin text-[var(--bp-accent)]" />
-      <p className="text-[13px] text-[var(--bp-text-secondary)] italic">Memuat data konten...</p>
+      <Loader2 className="w-8 h-8 animate-spin text-[#00A896]" />
+      <p className="text-[13px] text-[#9B8EA0] italic">Curating your content...</p>
     </div>
   );
 
-  // Robust Theme Detection
-  const primaryColor = data.visual_theme?.primary?.toLowerCase() || '#000000';
-  const isLightMode = primaryColor === '#fff5f7' || data.product_category === 'BELGIE' || primaryColor === '#ffffff';
-
   return (
-    <div className="space-y-6 md:space-y-10 pb-24 md:pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Top Bar */}
-      <div className="flex items-center justify-between sticky top-[48px] md:top-0 z-40 bg-[var(--bp-bg-page)]/80 backdrop-blur-md py-3 md:py-4 -mx-4 md:-mx-8 px-4 md:px-8 border-b border-[var(--bp-border)]">
-        <button onClick={() => router.back()} className="flex items-center gap-2 text-[10px] md:text-[12px] font-medium text-[var(--bp-text-secondary)] hover:text-[var(--bp-text-primary)] transition-colors">
-          <ArrowLeft size={14} /> Back to Editor
-        </button>
-        <div className="flex items-center gap-2 md:gap-3">
-          <Button variant="secondary" size="sm" onClick={() => handleSave('draft')} disabled={isSaving} className="text-[10px] md:text-[12px] px-3 md:px-4">
-            {isSaving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Draft
-          </Button>
-          <Button size="sm" onClick={() => handleSave('approved')} disabled={isSaving} className="text-[10px] md:text-[12px] px-3 md:px-4">
-            Approve & Publish <Send size={12} />
-          </Button>
+    <div 
+      className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000"
+    >
+      {/* Editorial Top Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-[#E8E5DF] pb-8">
+        <div className="space-y-2">
+          <button 
+            onClick={() => router.back()} 
+            className="group flex items-center gap-2 text-[11px] font-bold text-[#9B8EA0] uppercase tracking-[0.2em] hover:text-[#00A896] transition-all mb-4 bg-white border border-[#E8E5DF] px-4 py-1.5 rounded-full shadow-sm hover:shadow-md w-fit"
+          >
+            <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Back to Editor
+          </button>
+          <h1 className="text-3xl md:text-5xl font-serif text-[#1C1C1E] leading-tight">
+            Content Review <span className="text-[#00A896] italic">&</span> Quality Check
+          </h1>
+        </div>
+        <div className="flex items-center gap-4 shrink-0">
+          <button 
+            onClick={() => handleSave('draft')} 
+            className="px-6 py-2.5 rounded-full border border-[#00A896] text-[#00A896] text-[12px] font-bold hover:bg-[#E0F5F2] transition-all flex items-center gap-2 shadow-sm"
+          >
+            Save Draft
+          </button>
+          <button 
+            onClick={() => handleSave('approved')} 
+            className="px-8 py-3 rounded-full bg-[#00A896] text-white text-[13px] font-black uppercase tracking-widest hover:bg-[#008A7B] shadow-md hover:shadow-lg transition-all flex items-center gap-3"
+          >
+            Approve <Send size={14} />
+          </button>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 md:gap-10">
-        <div className="xl:col-span-8 space-y-10 md:space-y-12">
-          {/* Analysis */}
-          <section className="space-y-4">
-            <div className="flex items-center gap-2.5 px-1">
-              <div className="w-7 h-7 bg-purple-500/20 rounded-lg flex items-center justify-center text-purple-400"><Sparkles size={14} /></div>
-              <h2 className="font-bold uppercase tracking-widest text-[var(--bp-text-secondary)] text-[12px]">Psychology Analysis</h2>
-            </div>
-            <Card className="bg-gradient-to-br from-purple-500/[0.05] to-transparent border-purple-500/10" padding="p-6">
-              <div className="space-y-4">
-                <div>
-                  <h4 className="text-[10px] font-black text-purple-400 uppercase tracking-widest mb-1">Target Anxiety</h4>
-                  <p className="text-[14px] text-[var(--bp-text-primary)] leading-relaxed italic">"{data.analysis?.pain_points}"</p>
-                </div>
-                <div className="pt-4 border-t border-white/5">
-                  <h4 className="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Psychological Motive</h4>
-                  <p className="text-[13px] text-[var(--bp-text-secondary)]">{data.analysis?.psychological_motive}</p>
-                </div>
-              </div>
-            </Card>
-          </section>
-
-          {/* Visual & Preview */}
-          <section className="space-y-4">
-            <div className="flex items-center gap-2.5 px-1">
-              <div className="w-7 h-7 bg-[var(--bp-accent-light)] rounded-lg flex items-center justify-center text-[var(--bp-accent)]"><Check size={14} /></div>
-              <h2 className="font-bold uppercase tracking-widest text-[var(--bp-text-secondary)] text-[12px]">Visual & Caption</h2>
-            </div>
-            <ImagePreview image_url={selectedImage} data={data} />
-          </section>
-
-          {/* TikTok Scripts */}
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
+        {/* Main Content Area (2/3) */}
+        <div className="xl:col-span-8 space-y-12">
+          
+          {/* 1. Psychological Analysis */}
           <section className="space-y-6">
-            <div className="flex items-center gap-2.5 px-1">
-              <div className="w-7 h-7 bg-red-500/20 rounded-lg flex items-center justify-center text-red-400"><Send size={14} /></div>
-              <h2 className="font-bold uppercase tracking-widest text-[var(--bp-text-secondary)] text-[12px]">TikTok Scripts (30s)</h2>
+            <h2 className="text-xl font-serif text-[#1C1C1E] border-l-4 border-[#00A896] pl-4">Psychological Strategy</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <CaptionBlock 
+                label="Target Anxiety" 
+                content={data.analysis?.pain_points || ''} 
+                variant="secondary"
+                isItalic
+              />
+              <CaptionBlock 
+                label="Psychological Motive" 
+                content={data.analysis?.psychological_motive || ''} 
+                variant="secondary"
+              />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          </section>
+
+          {/* 2. Visual & Content Preview */}
+          <section className="space-y-8 pt-4">
+            <h2 className="text-xl font-serif text-[#1C1C1E] border-l-4 border-[#00A896] pl-4">Visual & Copy Presentation</h2>
+            
+            <ImagePreview image_url={selectedImage} data={data} />
+
+            <div className="space-y-8 mt-10">
+              <CaptionBlock 
+                label="Recommended Caption (Storytelling)" 
+                content={data.caption_v1} 
+                variant="editorial"
+              />
+              <CaptionBlock 
+                label="Alternative Caption (Direct)" 
+                content={data.caption_v2} 
+                variant="secondary"
+              />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <CaptionBlock label="Hashtags" content={data.hashtag} variant="accent" />
+                <CaptionBlock label="Posting Schedule" content={data.waktu_posting} variant="amber" />
+              </div>
+            </div>
+          </section>
+
+          {/* 3. TikTok Scripts */}
+          <section className="space-y-8 pt-4">
+            <h2 className="text-xl font-serif text-[#1C1C1E] border-l-4 border-[#00A896] pl-4">Engagement Utility (Short-Form)</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {data.tiktok_scripts?.map((item, idx) => (
-                <Card key={idx} className={`${isLightMode ? 'bg-black/5' : 'bg-white/[0.02]'} border-white/5 flex flex-col group transition-all`} padding="p-5">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-[9px] font-black px-2 py-0.5 bg-red-500/10 text-red-400 rounded-full border border-red-500/20">30s Script</span>
-                    <span className="text-[9px] font-bold text-gray-500 opacity-50">Var {idx + 1}</span>
-                  </div>
-                  <h4 className={`text-[13px] font-bold ${isLightMode ? 'text-black' : 'text-white'} mb-3 group-hover:text-red-400 transition-colors leading-tight`}>{item.title}</h4>
-                  <div className={`flex-1 ${isLightMode ? 'bg-white/60' : 'bg-black/40'} rounded-xl p-4 border border-white/5 overflow-y-auto max-h-[250px] scrollbar-hide`}>
-                    <p className={`text-[12px] font-medium leading-relaxed ${isLightMode ? 'text-gray-900' : 'text-gray-200'}`}>{item.script}</p>
-                  </div>
-                  <button onClick={() => copyToClipboard(item.script)} className="w-full mt-4 py-3 bg-red-500/10 hover:bg-red-500/20 rounded-xl text-[11px] font-black text-red-500 transition-all uppercase tracking-widest border border-red-500/10">
-                    COPY THIS SCRIPT
-                  </button>
-                </Card>
+                <CaptionBlock 
+                  key={idx}
+                  label={`Video Var ${idx + 1}`}
+                  content={`${item.title}\n\n${item.script}`}
+                  variant="secondary"
+                />
               ))}
             </div>
           </section>
+
+          {/* 4. Visual Strategy Notes */}
+          <section className="space-y-6 pt-4 border-t border-[#EDEBE5]">
+            <CaptionBlock 
+              label="Visual Strategy Design MD" 
+              content={data.rekomendasi_visual} 
+              variant="purple"
+              isItalic
+            />
+          </section>
         </div>
 
-        {/* Right Column: Visual Strategy Notes */}
-        <div className="xl:col-span-4 space-y-8 self-start">
+        {/* Right Panel (1/3) */}
+        <div className="xl:col-span-4 space-y-10 self-start sticky top-20">
           <section className="space-y-4">
-            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest pl-1">Visual Strategy Notes</label>
-            <div className={`p-6 border rounded-2xl ${isLightMode ? 'bg-amber-100/50 border-amber-200' : 'bg-amber-500/5 border-amber-500/20'}`}>
-              <p className={`text-[13px] italic leading-relaxed font-bold ${isLightMode ? 'text-amber-900' : 'text-amber-200'}`}>
-                &quot;{data.rekomendasi_visual}&quot;
-              </p>
-            </div>
-          </section>
-
-          <section className="space-y-4 pt-4 border-t border-[var(--bp-border)]">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--bp-text-muted)] uppercase tracking-widest pl-1">
-              <Sparkles size={12} className="text-[var(--bp-accent)]" /> 1. Visual Studio
-            </div>
-            <Card padding="p-0">
+            <label className="text-[10px] font-bold text-[#9B8EA0] uppercase tracking-[0.2em] px-1">Studio Assets</label>
+            <div className="bg-white border border-[#E8E5DF] rounded-xl p-6 shadow-sm">
               <ImagePicker initialPrompt={data.image_prompt?.en || ''} format={data.post_format} onImageSelected={setSelectedImage} />
-            </Card>
+            </div>
           </section>
 
-          <section className="space-y-4 pt-4 border-t border-[var(--bp-border)]">
-            <div className="flex items-center gap-2 text-[10px] font-bold text-[var(--bp-text-muted)] uppercase tracking-widest pl-1">2. Design Assets</div>
-            <CanvaExportButton type={data.canva_template_type} format={data.post_format} caption={data.caption_v1} />
+          <section className="space-y-6">
+            <label className="text-[10px] font-bold text-[#9B8EA0] uppercase tracking-[0.2em] px-1">Design Distribution</label>
+            <div className="bg-white border border-[#E8E5DF] rounded-xl p-6 shadow-sm">
+              <CanvaExportButton type={data.canva_template_type} format={data.post_format} caption={data.caption_v1} />
+            </div>
+          </section>
+
+          <section className="pt-6 border-t border-[#EDEBE5]">
+             <div className="bg-[#F0EEE8] rounded-xl p-6 space-y-4">
+               <label className="text-[10px] font-bold text-[#9B8EA0] uppercase tracking-[0.2em]">Original Blueprint</label>
+               <p className="text-[12px] text-[#3D3D3D] font-mono leading-relaxed line-clamp-6 opacity-80 italic">
+                 {originalText}
+               </p>
+             </div>
           </section>
         </div>
       </div>

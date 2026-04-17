@@ -6,13 +6,30 @@ export async function GET() {
     const client = supabaseAdmin || supabase;
     if (!client) return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
     
-    // Fetch from the joined view for the dashboard
+    // Fetch with a direct join to be more robust than the view
     const { data, error } = await client
-      .from('content_dashboard')
-      .select('*');
+      .from('captions')
+      .select(`
+        *,
+        contents (
+          raw_text,
+          content_type,
+          source
+        )
+      `)
+      .order('created_at', { ascending: false });
 
     if (error) throw error;
-    return NextResponse.json(data);
+
+    // Flatten the data to match ContentRecord interface
+    const flattenedData = data.map((item: any) => ({
+      ...item,
+      raw_text: item.contents?.raw_text,
+      content_type: item.contents?.content_type,
+      source: item.contents?.source
+    }));
+
+    return NextResponse.json(flattenedData);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
@@ -33,9 +50,8 @@ export async function POST(req: Request) {
         source: body.source || 'telegram',
         content_type: body.tipe,
         extra_info: {
-          waktu_posting: body.waktu_posting,
-          canva_template_type: body.canva_template_type,
-          generated_images: body.generated_images
+          ...body, // Save the entire generation data for future detail views
+          generated_at: new Date().toISOString()
         }
       }])
       .select()

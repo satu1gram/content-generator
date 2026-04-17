@@ -64,11 +64,15 @@ FORMAT OUTPUT WAJIB JSON:
   }
 }
 
-PANDUAN WARNA BRAND:
-1. BP: Primary #0A0F0D, Accent #F59E0B, Text #FFFFFF.
-2. BRASSIC: Primary #1A0B2E, Accent #D8B4FE, Text #FFFFFF.
-3. BELGIE: Primary #FFF5F7, Accent #F43F5E, Text #2D3748.
-4. DEFAULT: Gunakan skema BP.
+PANDUAN WARNA BRAND (DETIL):
+1. BP REGULAR (Red/Amber): Primary #0A0F0D (Black), Accent #F59E0B (Gold), Text #FFFFFF.
+2. BP GREEN (Kids): Primary #064E3B (Emerald), Accent #10B981 (Green), Text #FFFFFF.
+3. BP BLUE / NORWAY (Women/Brain): Primary #0C4A6E (Navy), Accent #0EA5E9 (Sky), Text #FFFFFF.
+4. BELGIE (Skincare): Primary #991B1B (Deep Red), Accent #EF4444 (Ruby), Text #FFFFFF. (Bisa juga mode White/Champagne jika diinginkan).
+5. BRASSIC PRO (Joints): Primary #451A03 (Brown), Accent #D97706 (Amber), Text #FFFFFF.
+6. BRASSIC EYE (Vision): Primary #4C1D95 (Violet), Accent #8B5CF6 (Purple), Text #FFFFFF.
+7. STEFFI PRO (Sweetener): Primary #065F46 (Teal), Accent #34D399 (Mint), Text #FFFFFF.
+8. DEFAULT: Gunakan skema BP REGULAR.
 `;
 
 export default genAI;

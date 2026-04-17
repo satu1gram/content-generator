@@ -9,24 +9,22 @@ const Sidebar = () => {
   const pathname = usePathname();
 
   const navItems = [
-    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
-    { name: 'Input', href: '/input', icon: PlusCircle },
+    { name: 'Home', href: '/', icon: LayoutDashboard },
+    { name: 'Create', href: '/input', icon: PlusCircle },
     { name: 'Calendar', href: '/calendar', icon: Calendar },
-    { name: 'Review', href: '/review', icon: CheckSquare },
+    { name: 'History', href: '/history', icon: CheckSquare },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   ];
 
   return (
     <>
-      {/* Desktop Sidebar */}
-      <aside className="fixed left-0 top-0 bottom-0 w-[56px] bg-surface border-r border-[var(--bp-border)] hidden md:flex flex-col items-center py-4 z-50">
-        {/* App Logo */}
-        <div className="w-8 h-8 bg-[var(--bp-text-primary)] rounded-[10px] flex items-center justify-center mb-8 shrink-0 shadow-sm">
-          <Sparkles size={18} className="text-white" fill="currentColor" />
-        </div>
+      {/* Editorial Desktop Sidebar */}
+      <aside className="fixed left-0 top-0 bottom-0 w-[56px] bg-white border-r border-[#E8E5DF] hidden md:flex flex-col items-center py-6 z-50">
+        <Link href="/" className="w-8 h-8 bg-[#1C1C1E] rounded-lg flex items-center justify-center mb-10 shrink-0 shadow-sm hover:scale-105 transition-transform">
+          <Sparkles size={16} className="text-[#00A896]" fill="currentColor" />
+        </Link>
 
-        {/* Nav Icons */}
-        <nav className="flex flex-col gap-2 w-full px-2">
+        <nav className="flex flex-col gap-4 w-full px-2">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href;
@@ -37,15 +35,15 @@ const Sidebar = () => {
                 href={item.href}
                 title={item.name}
                 className={`
-                  w-10 h-10 flex items-center justify-center rounded-[var(--bp-radius-sm)]
-                  transition-all duration-150
+                  w-10 h-10 flex items-center justify-center rounded-lg
+                  transition-all duration-200
                   ${isActive 
-                    ? 'bg-[var(--bp-bg-hover)] text-[var(--bp-accent)] shadow-[0_2px_8px_rgba(124,111,247,0.15)]' 
-                    : 'text-[var(--bp-text-primary)] opacity-40 hover:opacity-100 hover:bg-[var(--bp-bg-inner)]'
+                    ? 'bg-[#F7F6F2] text-[#00A896] shadow-sm' 
+                    : 'text-[#9B8EA0] hover:text-[#1C1C1E] hover:bg-[#F7F6F2]'
                   }
                 `.trim()}
               >
-                <Icon size={20} />
+                <Icon size={18} strokeWidth={isActive ? 2.5 : 2} />
               </Link>
             );
           })}
@@ -53,14 +51,13 @@ const Sidebar = () => {
 
         <div className="flex-1" />
 
-        {/* User Avatar */}
-        <div className="w-7 h-7 rounded-full bg-[var(--bp-accent-light)] border border-[var(--bp-border-strong)] flex items-center justify-center text-[10px] font-bold text-[var(--bp-accent)] shrink-0">
+        <div className="w-8 h-8 rounded-full bg-[#E0F5F2] border border-[#EDEBE5] flex items-center justify-center text-[10px] font-black text-[#00A896] shrink-0">
           BP
         </div>
       </aside>
 
-      {/* Mobile Bottom Navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 h-[64px] bg-surface/80 backdrop-blur-xl border-t border-[var(--bp-border)] flex md:hidden items-center justify-around px-4 z-50 pb-safe">
+      {/* Editorial Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 h-[64px] bg-white/95 backdrop-blur-xl border-t border-[#E8E5DF] flex md:hidden items-center justify-around px-4 z-50 pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.02)]">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
@@ -70,20 +67,20 @@ const Sidebar = () => {
               key={item.href}
               href={item.href}
               className={`
-                flex flex-col items-center gap-1.5 px-3 py-2 rounded-xl transition-all
+                flex flex-col items-center gap-1 transition-all
                 ${isActive 
-                  ? 'text-[var(--bp-accent)]' 
-                  : 'text-[var(--bp-text-muted)]'
+                  ? 'text-[#00A896]' 
+                  : 'text-[#9B8EA0]'
                 }
               `.trim()}
             >
               <div className={`
-                p-1 rounded-lg transition-all
-                ${isActive ? 'bg-[var(--bp-accent)]/10 scale-110' : ''}
+                p-1.5 rounded-lg transition-all
+                ${isActive ? 'bg-[#E0F5F2] scale-110' : ''}
               `}>
-                <Icon size={20} />
+                <Icon size={18} strokeWidth={2.5} />
               </div>
-              <span className="text-[9px] font-bold uppercase tracking-wider">{item.name}</span>
+              <span className="text-[9px] font-bold uppercase tracking-widest">{item.name}</span>
             </Link>
           );
         })}

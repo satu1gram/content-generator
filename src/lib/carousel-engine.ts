@@ -71,74 +71,131 @@ const getHtmlTemplate = (
   theme: VisualTheme
 ) => {
   const hasImage = !!stockImageUrl;
+  const isAlt = index % 2 === 1; // Alternating layout
   const bgOffsetX = - (index * 1080);
-  const isLightMode = theme.primary.toLowerCase() === '#fff5f7' || theme.text === '#2d3748';
-  const panoramaBrightness = isLightMode ? '1.5' : '0.65';
-  const glassBg = isLightMode ? 'rgba(0,0,0,0.03)' : 'rgba(255,255,255,0.08)';
-  const glassBorder = isLightMode ? 'rgba(0,0,0,0.05)' : 'rgba(255,255,255,0.12)';
+  const isLightMode = theme.primary.toLowerCase() === '#fff5f7' || theme.primary.toLowerCase() === '#ffffff' || theme.text === '#2d3748';
+  
+  const accentColor = '#00A896'; // Dashboard Teal
+  const labelColor = isLightMode ? '#1C1C1E' : '#FFFFFF';
+  const bgColor = isLightMode ? '#FAF9F6' : theme.primary; // Soft off-white for light mode
+  
+  const vignette = isLightMode 
+    ? `linear-gradient(to right, ${bgColor} 0%, ${bgColor}f2 30%, ${bgColor}00 100%)`
+    : `linear-gradient(to right, rgba(28,28,30,0.95) 0%, rgba(28,28,30,0.85) 50%, rgba(28,28,30,0) 100%)`;
 
   return `
 <!DOCTYPE html>
 <html>
 <head>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+    
     body {
       margin: 0; padding: 0;
       width: 1080px; height: 1080px;
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-family: 'DM Sans', sans-serif;
       overflow: hidden;
-      background: ${theme.primary};
-      display: flex;
-      flex-direction: row;
+      background: ${bgColor};
       color: ${theme.text};
+      display: flex;
     }
+
+    .paper-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png');
+      opacity: ${isLightMode ? '0.2' : '0.05'};
+      pointer-events: none; z-index: 50;
+    }
+
+    .slide-container {
+      position: relative;
+      width: 1080px; height: 1080px;
+      display: flex;
+      flex-direction: ${isAlt ? 'row-reverse' : 'row'};
+    }
+
     .image-section {
       display: ${hasImage ? 'block' : 'none'};
-      width: 540px; height: 100%; position: relative; overflow: hidden; background: #111;
+      width: 540px; height: 100%; position: relative; overflow: hidden;
     }
-    .image-section img { width: 100%; height: 100%; object-fit: cover; }
-    .text-section {
-      flex: 1; height: 100%; position: relative; display: flex; flex-direction: column;
-      justify-content: center; align-items: center; padding: ${hasImage ? '0 60px' : '0 120px'};
-      box-sizing: border-box; z-index: 10; text-align: center;
+    .image-section img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.9); }
+    
+    .content-section {
+      flex: 1; height: 100%; position: relative;
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 80px; box-sizing: border-box; z-index: 10;
+      text-align: ${isAlt ? 'right' : 'left'};
     }
-    .panorama-bg {
+
+    .vignette-overlay {
+      position: absolute; top: 0; ${isAlt ? 'right' : 'left'}: 0;
+      width: 100%; height: 100%;
+      background: ${vignette};
+      transform: ${isAlt ? 'scaleX(-1)' : 'none'};
+      z-index: -1;
+    }
+
+    .panoramic-texture {
       position: absolute; top: 0; left: 0; width: ${totalSlides * 1080}px; height: 1080px;
       background-image: url('${PANORAMA_URL}'); background-size: cover;
-      transform: translateX(${bgOffsetX}px); filter: brightness(${panoramaBrightness}) saturate(0.5); z-index: -1;
-      opacity: ${isLightMode ? '0.2' : '0.6'};
+      transform: translateX(${bgOffsetX}px);
+      filter: grayscale(1) opacity(0.15); z-index: -2;
     }
-    .glass-box {
-      width: 100%; max-width: ${hasImage ? '480px' : '840px'};
-      background: ${glassBg}; backdrop-filter: blur(35px);
-      padding: 60px; border-radius: 50px; border: 1px solid ${glassBorder};
-      box-shadow: 0 40px 100px rgba(0,0,0,${isLightMode ? '0.05' : '0.4'});
-    }
+
     .index-badge {
-      font-size: ${hasImage ? '100px' : '140px'}; font-weight: 800; color: transparent;
-      -webkit-text-stroke: 1px ${theme.accent}; margin-bottom: -20px; display: block; line-height: 1;
+      position: absolute; bottom: 80px; right: 80px;
+      font-size: 14px; font-weight: 700; text-transform: uppercase; tracking: 0.3em;
+      color: ${labelColor}; display: flex; align-items: center; gap: 12px;
       opacity: 0.4;
     }
-    h1 { font-size: ${hasImage ? '56px' : '72px'}; font-weight: 800; line-height: 1.1; margin: 0 0 24px 0; text-wrap: balance; }
-    p { font-size: ${hasImage ? '28px' : '36px'}; line-height: 1.6; font-weight: 500; opacity: 0.85; margin: 0; text-wrap: balance; }
+    .index-badge::before {
+      content: ""; width: 25px; height: 1px; background: ${accentColor}; opacity: ${isLightMode ? '0.2' : '0.4'};
+      order: 1;
+    }
+
     .footer {
-      position: absolute; bottom: 80px; left: 0; width: 100%;
-      display: flex; justify-content: center; align-items: center;
-      color: ${theme.accent}; font-weight: 800; font-size: 24px; opacity: 0.8;
+      position: absolute; top: 80px; right: 80px;
+      display: flex; align-items: center; gap: 8px;
+      color: ${labelColor}; font-weight: 700; font-size: 14px; 
+      text-transform: uppercase; tracking: 0.3em; opacity: 0.6;
+    }
+
+    h1 { 
+      font-family: 'Playfair Display', serif;
+      font-size: 84px; font-weight: 700; line-height: 1.0; margin: 0 0 28px 0; 
+      color: ${theme.text}; text-wrap: balance;
+      letter-spacing: -0.02em;
+    }
+    h1 span { color: ${accentColor}; font-style: italic; font-weight: 500; }
+
+    p { 
+      font-size: 34px; line-height: 1.55; font-weight: 400; 
+      color: ${theme.text}; opacity: 0.8; margin: 0; text-wrap: balance; 
+      max-width: 620px;
+      ${isAlt ? 'margin-left: auto;' : ''}
+      letter-spacing: -0.01em;
     }
   </style>
 </head>
 <body>
-  <div class="image-section">${stockImageUrl ? `<img src="${stockImageUrl}">` : ''}</div>
-  <div class="text-section">
-    <div class="panorama-bg"></div>
-    <div class="glass-box">
-      <span class="index-badge">${index + 1}</span>
-      <h1>${title}</h1>
+  <div class="slide-container">
+    <div class="paper-overlay"></div>
+    <div class="image-section">${stockImageUrl ? `<img src="${stockImageUrl}">` : ''}</div>
+    <div class="content-section">
+      <div class="vignette-overlay"></div>
+      <div class="panoramic-texture"></div>
+      
+      <div class="index-badge">
+        ${(index + 1).toString().padStart(2, '0')} 
+        <span style="opacity: 0.4; margin: 0 4px;">/</span> 
+        ${totalSlides.toString().padStart(2, '0')}
+      </div>
+      
+      <h1>${title.replace(/(.*)/, '$1')}</h1>
       <p>${body}</p>
+      
+      <div class="footer">${SOCIAL_HANDLE}</div>
     </div>
-    <div class="footer"><span>${SOCIAL_HANDLE}</span></div>
   </div>
 </body>
 </html>

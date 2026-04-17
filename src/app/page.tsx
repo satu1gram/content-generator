@@ -1,9 +1,19 @@
-import { Sparkles, TrendingUp, Users, Clock, ArrowRight, Zap, Target, MessageCircle, Calendar } from 'lucide-react';
+import Link from 'next/link';
+import { 
+  Sparkles, 
+  TrendingUp, 
+  Clock, 
+  ArrowRight, 
+  Zap, 
+  Target, 
+  MessageCircle, 
+  Calendar,
+  PlusCircle, 
+  BarChart3 
+} from 'lucide-react';
 import ContentCard from '@/components/ContentCard';
 import { supabase } from '@/lib/supabase';
 import { ContentRecord } from '@/lib/types';
-import Card from '@/components/ui/Card';
-import Button from '@/components/ui/Button';
 import QuickActionCard from '@/components/ui/QuickActionCard';
 
 export const revalidate = 0; // Disable caching for dashboard
@@ -12,8 +22,15 @@ async function getRecentContents() {
   if (!supabase) return [];
   
   const { data, error } = await supabase
-    .from('content_dashboard')
-    .select('*')
+    .from('captions')
+    .select(`
+      *,
+      contents (
+        raw_text,
+        content_type,
+        source
+      )
+    `)
     .order('created_at', { ascending: false })
     .limit(4);
 
@@ -21,7 +38,13 @@ async function getRecentContents() {
     console.error('Fetch error:', error);
     return [];
   }
-  return data as ContentRecord[];
+
+  return data.map((item: any) => ({
+    ...item,
+    raw_text: item.contents?.raw_text,
+    content_type: item.contents?.content_type,
+    source: item.contents?.source
+  })) as ContentRecord[];
 }
 
 async function getTotalCount() {
@@ -44,129 +67,143 @@ export default async function Dashboard() {
   ]);
 
   const stats = [
-    { name: 'Total Konten', value: totalCount.toString(), icon: Zap, color: 'var(--bp-accent)' },
-    { name: 'Engagement', value: '0%', icon: TrendingUp, color: 'var(--bp-green)' },
-    { name: 'New Leads', value: '0', icon: Target, color: 'var(--bp-blue)' },
-    { name: 'Avg. frequency', value: '0/day', icon: MessageCircle, color: 'var(--bp-amber)' },
+    { name: 'Total Production', value: totalCount.toString(), icon: Zap, color: '#00A896' },
+    { name: 'Engagement Rate', value: '0%', icon: TrendingUp, color: '#3B82F6' },
+    { name: 'Conversion Rate', value: '0.0%', icon: Target, color: '#F59E0B' },
+    { name: 'Avg. Frequency', value: '0/day', icon: MessageCircle, color: '#8B5CF6' },
   ];
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Hero Header */}
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="space-y-1">
-          <h1 className="text-xl md:text-2xl font-semibold tracking-tight">Overview</h1>
-          <p className="text-[12px] md:text-[13px] text-[var(--bp-text-secondary)]">
-            Halo! Ini adalah performa konten British Propolis Anda hari ini.
+    <div className="space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+      {/* Editorial Hero Header */}
+      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-[#E8E5DF] pb-10">
+        <div className="space-y-3">
+          <div className="flex items-center gap-2 text-[10px] font-bold text-[#00A896] uppercase tracking-[0.2em]">
+             Dashboard <span className="text-[#EDEBE5]">/</span> Overview
+          </div>
+          <h1 className="text-3xl md:text-5xl font-serif text-[#1C1C1E] leading-tight max-w-2xl">
+            Good Afternoon, <span className="text-[#00A896] italic">Creator</span>.
+          </h1>
+          <p className="text-[14px] text-[#9B8EA0] font-sans max-w-md">
+            Your British Propolis content performance is steady. Ready to produce some new insights today?
           </p>
         </div>
         
-        <div className="flex flex-wrap gap-2">
-          {!supabase && (
-            <div className="flex items-center gap-2.5 px-3 py-1.5 bg-[var(--bp-amber-bg)] border-[0.5px] border-[var(--bp-amber)]/20 rounded-[var(--bp-radius-sm)]">
-              <div className="w-1.5 h-1.5 rounded-full bg-[var(--bp-amber)] animate-pulse" />
-              <span className="text-[10px] font-semibold text-[var(--bp-amber)] uppercase tracking-wider">Setup Required</span>
-            </div>
-          )}
-          <Button variant="secondary" size="sm" className="flex-1 md:flex-none">Download Report</Button>
-          <Button size="sm" className="flex-1 md:flex-none">Kirim ke Telegram</Button>
+        <div className="flex items-center gap-3">
+          <button className="px-6 py-2.5 rounded-full border border-[#EDEBE5] bg-white text-[12px] font-bold text-[#1C1C1E] hover:bg-[#F7F6F2] transition-all shadow-sm">
+            Download Report
+          </button>
+          <button className="px-6 py-2.5 rounded-full bg-[#00A896] text-white text-[12px] font-bold hover:bg-[#008A7B] shadow-md hover:shadow-lg transition-all">
+            Kirim ke Telegram
+          </button>
         </div>
       </header>
 
-      {/* Stats Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+      {/* Stats Grid - Editorial Style */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat) => (
-          <Card key={stat.name} className="group hover:border-[var(--bp-accent)]/20 transition-all duration-300" padding="p-3 md:p-5">
-            <div className="flex items-center gap-3 mb-2 md:mb-3">
+          <div key={stat.name} className="bg-white border border-[#E8E5DF] rounded-xl p-6 shadow-sm hover:shadow-md transition-all group">
+            <div className="flex items-center justify-between mb-4">
               <div 
-                className="w-6 h-6 md:w-7 md:h-7 rounded-[var(--bp-radius-sm)] flex items-center justify-center opacity-80"
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
                 style={{ backgroundColor: `${stat.color}15`, color: stat.color }}
               >
-                <stat.icon size={14} className="md:w-4 md:h-4" />
+                <stat.icon size={16} />
               </div>
-              <span className="text-[9px] md:text-[10px] font-bold text-[var(--bp-text-muted)] uppercase tracking-widest truncate">{stat.name}</span>
+              <span className="text-[10px] font-bold text-[#9B8EA0] uppercase tracking-[0.1em]">{stat.name}</span>
             </div>
-            <div className="text-lg md:text-xl font-semibold tabular-nums tracking-tight">{stat.value}</div>
-          </Card>
+            <div className="text-2xl font-serif text-[#1C1C1E]">{stat.value}</div>
+            <div className="mt-2 text-[11px] text-[#00A896] font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+              +0% from last week
+            </div>
+          </div>
         ))}
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10">
-        {/* Recent Generations */}
-        <div className="lg:col-span-8 space-y-6">
-          <div className="flex items-center justify-between px-1">
-            <h2 className="text-[13px] md:text-[14px] font-semibold flex items-center gap-2">
-              <Sparkles size={16} className="text-[var(--bp-accent)]" /> Last Generations
+      {/* Main Layout Split */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+        {/* Recent Content (Main Area) */}
+        <div className="lg:col-span-8 space-y-8">
+          <div className="flex items-center justify-between border-b border-[#EDEBE5] pb-4">
+            <h2 className="text-xl font-serif text-[#1C1C1E] flex items-center gap-3">
+              <Clock size={18} className="text-[#00A896]" /> Recent Publications
             </h2>
-            <button className="text-[10px] md:text-[11px] font-medium text-[var(--bp-accent)] hover:underline flex items-center gap-1">
-              View history <ArrowRight size={12} />
-            </button>
+            <Link href="/history" className="text-[11px] font-bold text-[#00A896] hover:text-[#008A7B] flex items-center gap-2 uppercase tracking-widest">
+              View History <ArrowRight size={14} />
+            </Link>
           </div>
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {recentContents.length > 0 ? (
               recentContents.map((content) => (
-                <ContentCard key={content.id} content={content} />
+                <Link key={content.id} href={`/history/${content.id}`} className="group">
+                  <div className="bg-white border border-[#E8E5DF] rounded-xl overflow-hidden shadow-sm group-hover:shadow-md group-hover:border-[#00A896]/20 transition-all">
+                    <ContentCard content={content} />
+                  </div>
+                </Link>
               ))
             ) : (
-              <div className="col-span-full py-12 md:py-16 text-center border-thin border-dashed rounded-[var(--bp-radius-lg)] bg-inner">
-                <Sparkles size={24} className="text-[var(--bp-text-placeholder)] mx-auto mb-3" />
-                <p className="text-[12px] md:text-[13px] text-[var(--bp-text-muted)] italic px-4">Belum ada konten yang dihasilkan.</p>
-                <div className="mt-6">
-                  <Button size="sm" href="/input">Generate New Post</Button>
-                </div>
+              <div className="col-span-full py-20 text-center bg-[#F7F6F2] border border-dashed border-[#EDEBE5] rounded-xl space-y-4">
+                <Sparkles size={32} className="text-[#9B8EA0]/30 mx-auto" />
+                <p className="text-[14px] text-[#9B8EA0] italic font-serif">Awaiting your first editorial piece...</p>
+                <Link href="/input" className="inline-block px-8 py-3 bg-[#00A896] text-white rounded-full text-[12px] font-bold shadow-md hover:bg-[#008A7B]">
+                  Start Generating
+                </Link>
               </div>
             )}
           </div>
         </div>
 
-        {/* Sidebar Actions */}
-        <div className="lg:col-span-4 space-y-8">
-          <section className="space-y-4">
-            <h3 className="text-[12px] md:text-[13px] font-semibold px-1">Quick Actions</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-3">
+        {/* Action Sidebar */}
+        <div className="lg:col-span-4 space-y-10">
+          <section className="space-y-6">
+            <label className="text-[10px] font-bold text-[#9B8EA0] uppercase tracking-[0.2em] px-1">Studio Access</label>
+            <div className="space-y-4">
               <QuickActionCard 
-                icon={<MessageCircle />} 
-                title="Automation" 
-                name="Generate from Telegram" 
-                accentColor="var(--bp-accent)"
+                icon={<PlusCircle className="w-5 h-5" />} 
+                title="Create" 
+                name="Generate New Story" 
+                accentColor="#00A896"
                 href="/input"
               />
               <QuickActionCard 
-                icon={<Calendar />} 
-                title="Scheduling" 
-                name="Open Content Calendar" 
-                accentColor="var(--bp-blue)"
+                icon={<Calendar className="w-5 h-5" />} 
+                title="Planning" 
+                name="Editorial Calendar" 
+                accentColor="#3B82F6"
                 href="/calendar"
               />
-              <QuickActionCard 
-                icon={<Users />} 
-                title="Management" 
-                name="Agent Performance" 
-                accentColor="var(--bp-teal)"
-                href="/analytics"
-              />
+              <div className="opacity-60 cursor-not-allowed">
+                <QuickActionCard 
+                  icon={<BarChart3 className="w-5 h-5" />} 
+                  title="Analytics" 
+                  name="Performance Insights" 
+                  accentColor="#9B8EA0"
+                  href="#"
+                />
+              </div>
             </div>
           </section>
 
-          {/* AI Tips Card */}
-          <Card className="bg-[var(--bp-accent)] text-white border-none overflow-hidden relative" padding="p-5 md:p-6">
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-16 translate-x-16" />
-            <div className="relative z-10 space-y-4">
-              <h3 className="text-[12px] md:text-[13px] font-bold flex items-center gap-2">
-                <Sparkles size={14} /> Power Tip
-              </h3>
-              <p className="text-[11px] md:text-[12px] leading-relaxed text-white/80">
-                Gunakan format "Tanya Jawab" untuk konten Tipe B agar engagement rate naik hingga 25% lebih tinggi.
+          {/* Editorial Inset (Power Tip) */}
+          <div className="bg-[#1C1C1E] text-white rounded-xl p-8 relative overflow-hidden shadow-xl">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-[#00A896]/10 rounded-full -translate-y-16 translate-x-16" />
+            <div className="relative z-10 space-y-5">
+              <div className="flex items-center gap-2 text-[10px] font-bold text-[#00A896] uppercase tracking-[0.2em]">
+                <Sparkles size={12} fill="currentColor" /> Editorial Strategy
+              </div>
+              <h3 className="text-xl font-serif">The Power of Soft Storytelling</h3>
+              <p className="text-[13px] leading-relaxed text-[#9B8EA0]">
+                "Content Tipe B" often converts better when framed as an educational Q&A. Try answering actual customer anxieties in your next post.
               </p>
-              <button className="text-[10px] md:text-[11px] font-bold underline decoration-white/30 underline-offset-4 hover:decoration-white/100 transition-all">
-                Learn how it works
+              <button className="text-[11px] font-bold text-[#00A896] hover:underline decoration-white/30 underline-offset-4">
+                Read Best Practices &rarr;
               </button>
             </div>
-          </Card>
+          </div>
         </div>
       </div>
     </div>
   );
 }
+

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Sparkles, Upload, Loader2, CheckCircle2, RefreshCw } from 'lucide-react';
+import { Sparkles, Upload, Loader2, CheckCircle2, RefreshCw, Copy, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 interface ImagePickerProps {
@@ -16,6 +16,13 @@ const ImagePicker = ({ initialPrompt = '', format = 'feed', onImageSelected }: I
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedUrl, setGeneratedUrl] = useState('');
   const [uploadLoading, setUploadLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(prompt);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleGenerate = async () => {
     setIsGenerating(true);
@@ -61,23 +68,23 @@ const ImagePicker = ({ initialPrompt = '', format = 'feed', onImageSelected }: I
   };
 
   return (
-    <div className="w-full bg-white/[0.02] border border-white/10 rounded-2xl overflow-hidden shadow-2xl">
-      <div className="flex border-b border-white/10">
+    <div className="w-full bg-[var(--bp-bg-surface)] border border-[var(--bp-border)] rounded-2xl overflow-hidden shadow-sm">
+      <div className="flex border-b border-[var(--bp-border)]">
         <button
           onClick={() => setActiveTab('ai')}
-          className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-medium transition-all ${
-            activeTab === 'ai' ? 'bg-amber-500/10 text-amber-500' : 'text-gray-400 hover:text-white hover:bg-white/5'
+          className={`flex-1 py-4 flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-widest transition-all ${
+            activeTab === 'ai' ? 'bg-[var(--bp-accent)]/5 text-[var(--bp-accent)] shadow-[inset_0_-2px_0_var(--bp-accent)]' : 'text-[var(--bp-text-muted)] hover:text-[var(--bp-text-primary)] hover:bg-[var(--bp-bg-hover)]'
           }`}
         >
-          <Sparkles className="w-4 h-4" /> AI Generate
+          <Sparkles className="w-3.5 h-3.5" /> AI Studio
         </button>
         <button
           onClick={() => setActiveTab('upload')}
-          className={`flex-1 py-4 flex items-center justify-center gap-2 text-sm font-medium transition-all ${
-            activeTab === 'upload' ? 'bg-amber-500/10 text-amber-500' : 'text-gray-400 hover:text-white hover:bg-white/5'
+          className={`flex-1 py-4 flex items-center justify-center gap-2 text-[11px] font-black uppercase tracking-widest transition-all ${
+            activeTab === 'upload' ? 'bg-[var(--bp-accent)]/5 text-[var(--bp-accent)] shadow-[inset_0_-2px_0_var(--bp-accent)]' : 'text-[var(--bp-text-muted)] hover:text-[var(--bp-text-primary)] hover:bg-[var(--bp-bg-hover)]'
           }`}
         >
-          <Upload className="w-4 h-4" /> Upload Foto
+          <Upload className="w-3.5 h-3.5" /> Upload File
         </button>
       </div>
 
@@ -89,36 +96,48 @@ const ImagePicker = ({ initialPrompt = '', format = 'feed', onImageSelected }: I
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
-              className="space-y-4"
+              className="space-y-5"
             >
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-gray-500 uppercase tracking-wider">AI Image Prompt (English)</label>
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between px-1">
+                  <label className="text-[10px] font-black text-[var(--bp-text-muted)] uppercase tracking-widest">Image Generation Prompt</label>
+                  <button 
+                    onClick={handleCopy}
+                    className={`flex items-center gap-1.5 text-[9px] font-bold transition-all px-2 py-0.5 rounded-lg border ${
+                      copied 
+                        ? 'bg-green-500/10 text-green-600 border-green-500/20' 
+                        : 'bg-[var(--bp-bg-inner)] text-[var(--bp-text-muted)] border-[var(--bp-border)] hover:text-[var(--bp-text-primary)]'
+                    }`}
+                  >
+                    {copied ? <Check size={10} /> : <Copy size={10} />} {copied ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
                 <textarea
                   value={prompt}
                   onChange={(e) => setPrompt(e.target.value)}
-                  className="w-full h-24 p-3 bg-black/40 border border-white/10 rounded-xl text-sm text-white/80 focus:ring-2 focus:ring-amber-500/40 outline-none transition-all resize-none"
-                  placeholder="Describe your image..."
+                  className="w-full h-28 p-4 bg-[var(--bp-bg-inner)] border border-[var(--bp-border)] rounded-xl text-[13px] text-[var(--bp-text-primary)] font-medium focus:ring-1 focus:ring-[var(--bp-accent)] outline-none transition-all resize-none leading-relaxed"
+                  placeholder="Describe your image in English..."
                 />
               </div>
 
               {generatedUrl ? (
                 <div className="space-y-4">
-                  <div className="relative aspect-square rounded-xl overflow-hidden border border-white/20 ring-4 ring-amber-500/10">
+                  <div className="relative aspect-square rounded-xl overflow-hidden border border-[var(--bp-border)] ring-4 ring-[var(--bp-accent)]/5 shadow-md">
                     <img src={generatedUrl} alt="Generated" className="w-full h-full object-cover" />
                   </div>
-                  <div className="flex gap-2">
+                  <div className="flex gap-3">
                     <button
                       onClick={handleGenerate}
                       disabled={isGenerating}
-                      className="flex-1 py-3 flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-white rounded-xl font-medium transition-all"
+                      className="flex-1 py-3 flex items-center justify-center gap-2 bg-[var(--bp-bg-inner)] hover:bg-[var(--bp-bg-hover)] text-[var(--bp-text-primary)] border border-[var(--bp-border)] rounded-xl text-[12px] font-bold transition-all"
                     >
-                      <RefreshCw className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} /> Coba Lagi
+                      <RefreshCw className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} /> Regenerate
                     </button>
                     <button
                       onClick={() => onImageSelected(generatedUrl)}
-                      className="flex-1 py-3 flex items-center justify-center gap-2 bg-amber-500 hover:bg-amber-600 text-black rounded-xl font-bold transition-all shadow-lg"
+                      className="flex-1 py-3 flex items-center justify-center gap-2 bg-[var(--bp-accent)] hover:bg-[var(--bp-accent-hover)] text-white rounded-xl text-[12px] font-black transition-all shadow-lg"
                     >
-                      <CheckCircle2 className="w-4 h-4" /> Pakai Gambar
+                      <CheckCircle2 className="w-4 h-4" /> Use This Image
                     </button>
                   </div>
                 </div>
@@ -126,15 +145,15 @@ const ImagePicker = ({ initialPrompt = '', format = 'feed', onImageSelected }: I
                 <button
                   onClick={handleGenerate}
                   disabled={isGenerating || !prompt}
-                  className="w-full py-4 bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 disabled:opacity-50 disabled:cursor-not-allowed text-black font-bold rounded-xl transition-all shadow-[0_0_20px_rgba(245,158,11,0.3)] flex items-center justify-center gap-2"
+                  className="w-full py-4 bg-[var(--bp-accent)] hover:bg-[var(--bp-accent-hover)] disabled:opacity-50 disabled:cursor-not-allowed text-white font-black uppercase tracking-[0.1em] text-[12px] rounded-xl transition-all shadow-lg flex items-center justify-center gap-2.5"
                 >
                   {isGenerating ? (
                     <>
-                      <Loader2 className="w-5 h-5 animate-spin" /> Sedang membuat... (~20s)
+                      <Loader2 className="w-5 h-5 animate-spin" /> Generating... (~20s)
                     </>
                   ) : (
                     <>
-                      <Sparkles className="w-5 h-5" /> Generate Gambar
+                      <Sparkles className="w-5 h-5" /> Create AI Visual
                     </>
                   )}
                 </button>
@@ -148,13 +167,13 @@ const ImagePicker = ({ initialPrompt = '', format = 'feed', onImageSelected }: I
               exit={{ opacity: 0, y: -10 }}
               className="space-y-4"
             >
-              <div className="border-2 border-dashed border-white/10 rounded-2xl p-12 flex flex-col items-center justify-center gap-4 bg-white/[0.01] hover:bg-white/[0.03] transition-colors group">
-                <div className="p-4 bg-white/5 rounded-full group-hover:scale-110 transition-transform">
-                  <Upload className="w-8 h-8 text-gray-400" />
+              <div className="border-2 border-dashed border-[var(--bp-border)] rounded-2xl p-10 flex flex-col items-center justify-center gap-4 bg-[var(--bp-bg-inner)] hover:bg-[var(--bp-bg-hover)] transition-all cursor-pointer group relative">
+                <div className="p-4 bg-[var(--bp-bg-surface)] rounded-full group-hover:scale-110 transition-transform shadow-sm border border-[var(--bp-border)]">
+                  <Upload className="w-7 h-7 text-[var(--bp-accent)]" />
                 </div>
                 <div className="text-center">
-                  <p className="text-sm text-white/80 font-medium">Klik untuk upload atau drag & drop</p>
-                  <p className="text-xs text-gray-500 mt-1">PNG, JPG, WEBP (Max 10MB)</p>
+                  <p className="text-[13px] text-[var(--bp-text-primary)] font-bold">Klik atau seret foto ke sini</p>
+                  <p className="text-[11px] text-[var(--bp-text-muted)] mt-1">PNG, JPG, WEBP (Max 10MB)</p>
                 </div>
                 <input
                   type="file"
@@ -164,8 +183,8 @@ const ImagePicker = ({ initialPrompt = '', format = 'feed', onImageSelected }: I
                 />
               </div>
               {uploadLoading && (
-                <div className="flex items-center justify-center gap-2 text-amber-500 text-sm italic">
-                  <Loader2 className="w-4 h-4 animate-spin" /> Mengunggah ke Supabase...
+                <div className="flex items-center justify-center gap-2 text-[var(--bp-accent)] text-[12px] italic font-medium">
+                  <Loader2 className="w-4 h-4 animate-spin" /> Sedang mengunggah...
                 </div>
               )}
             </motion.div>

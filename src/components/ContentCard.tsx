@@ -12,16 +12,16 @@ interface ContentCardProps {
 
 const ContentCard = ({ content, onClick }: ContentCardProps) => {
   const statusColors = {
-    draft: 'bg-gray-500/10 text-[var(--bp-text-secondary)] border-[var(--bp-border)]',
-    approved: 'bg-[var(--bp-amber-bg)] text-[var(--bp-amber)] border-[var(--bp-amber)]/20',
-    posted: 'bg-[var(--bp-green-bg)] text-[var(--bp-green)] border-[var(--bp-green)]/20',
+    draft: 'bg-[#F7F6F2] text-[#9B8EA0] border-[#E8E5DF]',
+    approved: 'bg-[#E0F5F2] text-[#00A896] border-[#00A896]/20',
+    posted: 'bg-[#1C1C1E] text-white border-transparent',
   };
 
   const typeLabels = {
-    A: 'Testimoni',
-    B: 'Edukasi',
-    C: 'Peluang Bisnis',
-    D: 'Promo',
+    A: 'Testimonial',
+    B: 'Educational',
+    C: 'Opportunity',
+    D: 'Promotional',
   };
 
   return (
@@ -29,51 +29,51 @@ const ContentCard = ({ content, onClick }: ContentCardProps) => {
       onClick={onClick}
       className={`
         group relative cursor-pointer
-        hover:border-[var(--bp-accent)]/30 hover:shadow-md 
-        transition-all duration-300
+        bg-white border border-[#E8E5DF] rounded-2xl
+        hover:shadow-xl hover:border-[#00A896]/10
+        transition-all duration-300 transform hover:-translate-y-1
       `.trim()}
       padding="p-0 overflow-hidden"
     >
-      <div className="flex">
-        {/* Media Preview (Left) */}
-        <div className="w-24 shrink-0 bg-inner border-r border-thin flex items-center justify-center overflow-hidden">
+      <div className="flex flex-col">
+        {/* Media Preview (Top) */}
+        <div className="aspect-[16/9] w-full bg-[#F7F6F2] border-b border-[#E8E5DF] flex items-center justify-center overflow-hidden relative">
           {content.image_url ? (
-            <img src={content.image_url} alt="Content" className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-500" />
+            <img src={content.image_url} alt="Content" className="w-full h-full object-cover transition-transform group-hover:scale-110 duration-700" />
           ) : (
-            <ImageIcon className="w-6 h-6 text-[var(--bp-text-placeholder)]" />
+            <div className="flex flex-col items-center gap-2 opacity-20">
+              <ImageIcon className="w-8 h-8 text-[#9B8EA0]" />
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#9B8EA0]">No Visual</span>
+            </div>
           )}
+          
+          <div className="absolute top-4 left-4 z-10 flex gap-2">
+            <span className={`text-[9px] uppercase font-black px-2.5 py-1 rounded-full border shadow-sm ${statusColors[content.status as keyof typeof statusColors]}`}>
+              {content.status}
+            </span>
+          </div>
         </div>
 
-        {/* Content Info (Right) */}
-        <div className="flex-1 p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className={`text-[9px] uppercase font-bold px-2 py-0.5 rounded-full border ${statusColors[content.status]}`}>
-                {content.status}
-              </span>
-              <span className="text-[9px] uppercase font-bold px-2 py-0.5 rounded-[var(--bp-radius-xs)] bg-inner text-[var(--bp-text-secondary)] border-thin">
-                Tipe {content.content_type}
-              </span>
+        {/* Content Info (Bottom) */}
+        <div className="p-6 space-y-4">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-[10px] font-bold text-[#00A896] uppercase tracking-[0.2em]">
+              {typeLabels[content.content_type as keyof typeof typeLabels] || content.content_type}
             </div>
+            <h3 className="text-[15px] font-serif font-bold text-[#1C1C1E] line-clamp-2 leading-relaxed">
+              {content.caption_final ? content.caption_final.split('\n')[0] : content.raw_text.split('\n')[0]}
+            </h3>
           </div>
 
-          <h3 className="text-[13px] font-semibold text-[var(--bp-text-primary)] line-clamp-1 leading-snug">
-            {content.caption_final ? content.caption_final.split('\n')[0] : content.raw_text.split('\n')[0]}
-          </h3>
-
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1 text-[10px] text-[var(--bp-text-muted)] font-medium">
-                <Clock size={12} className="text-[var(--bp-accent)]" />
-                {content.waktu_posting || 'N/A'}
-              </div>
-              <div className="flex items-center gap-1 text-[10px] text-[var(--bp-text-muted)] font-medium">
-                <Tag size={12} className="text-[var(--bp-accent)]" />
-                {content.post_format || 'feed'}
+          <div className="pt-2 border-t border-[#F7F6F2] flex items-center justify-between text-[11px] text-[#9B8EA0] font-sans">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center gap-1.5">
+                <Clock size={12} className="text-[#00A896]" />
+                {content.waktu_posting || 'No Schedule'}
               </div>
             </div>
             
-            <div className="text-[var(--bp-accent)] opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-x-2 group-hover:translate-x-0">
+            <div className="w-8 h-8 rounded-full border border-[#EDEBE5] flex items-center justify-center text-[#1C1C1E] group-hover:bg-[#00A896] group-hover:text-white group-hover:border-transparent transition-all">
               <ExternalLink size={14} />
             </div>
           </div>

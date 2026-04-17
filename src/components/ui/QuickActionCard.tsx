@@ -12,40 +12,32 @@ interface QuickActionCardProps {
 
 const QuickActionCard = ({ icon, title, name, accentColor, href, onClick }: QuickActionCardProps) => {
   const content = (
-    <>
-      {/* Decorative Blob */}
+    <div className="relative z-10 flex items-center gap-4">
       <div 
-        className="absolute -top-3 -right-3 w-12 h-10 rounded-full opacity-20 transition-transform group-hover:scale-125"
+        className="w-12 h-12 rounded-xl flex items-center justify-center text-white shadow-sm transition-transform group-hover:scale-105"
         style={{ backgroundColor: accentColor }}
-      />
-
-      <div className="relative z-10 flex flex-col gap-3">
-        <div 
-          className="w-[26px] h-[26px] rounded-[var(--bp-radius-sm)] flex items-center justify-center text-white shadow-sm"
-          style={{ backgroundColor: accentColor }}
-        >
-          {React.cloneElement(icon as React.ReactElement, { size: 14 })}
-        </div>
-        
-        <div>
-          <p className="text-[10px] text-[var(--bp-text-muted)] font-medium uppercase tracking-wider mb-0.5">
-            {title}
-          </p>
-          <p className="text-[12px] font-semibold text-[var(--bp-text-primary)]">
-            {name}
-          </p>
-        </div>
+      >
+        {React.cloneElement(icon as React.ReactElement, { size: 20 })}
       </div>
-    </>
+      
+      <div>
+        <p className="text-[10px] text-[#9B8EA0] font-bold uppercase tracking-[0.2em] mb-1">
+          {title}
+        </p>
+        <p className="text-[14px] font-serif font-bold text-[#1C1C1E]">
+          {name}
+        </p>
+      </div>
+    </div>
   );
 
   const classes = `
-    relative overflow-hidden
-    bg-inner border-thin 
-    rounded-[var(--bp-radius-md)] 
-    p-3 cursor-pointer
-    transition-all duration-150
-    hover:bg-[var(--bp-bg-hover)] hover:border-[rgba(124,111,247,0.2)]
+    group relative overflow-hidden
+    bg-white border border-[#E8E5DF] 
+    rounded-2xl 
+    p-5 cursor-pointer
+    transition-all duration-300
+    hover:shadow-lg hover:border-[#007A6E]/10
     active:scale-[0.98]
     block
   `.trim();

@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   serverExternalPackages: ['puppeteer'],
-  trailingSlash: false,
+  trailingSlash: true,
 };
 
 export default nextConfig;

@@ -285,22 +285,23 @@ export const generateCarouselImages = async (
   // 💻 LOCAL / NODE LOGIC (Using Puppeteer via specialized module)
   let browser;
   try {
-    // 🛡️ TOTAL STEALTH ISOLATION: 
-    // We use eval('require') to completely hide Node.js internals from the Next.js/Edge static analyzer.
+    // 🛡️ EDGE-SAFE STEALTH ISOLATION: 
+    // We avoid eval() to satisfy Cloudflare's security policies.
+    // Using a non-static path for import() prevents Turbopack from scanning it.
     if (!isEdge) {
-      console.log('💻 Env: Local Node. Loading isolated browser utility...');
+      console.log('💻 Env: Local Node. Loading bridge via dynamic path...');
       
       try {
-        // This trick ensures the bundler doesn't see 'require' or 'module'
-        const req = eval('require');
-        const { createRequire } = req('module');
-        const localRequire = createRequire(import.meta.url);
+        // Construct path dynamically so static analysis skips it
+        const prefix = '../../../';
+        const moduleName = 'node-utils/node-browser.js';
+        const nodeBrowser = await import(`${prefix}${moduleName}`);
         
-        // Path is outside 'src' to prevent bundler scans
-        const nodeBrowser = localRequire('../../../node-utils/node-browser.js');
-        browser = await nodeBrowser.getBrowser(token);
+        // Handle both CJS (module.exports) and ESM
+        const getBrowser = nodeBrowser.getBrowser || nodeBrowser.default?.getBrowser || nodeBrowser;
+        browser = await getBrowser(token);
       } catch (err: any) {
-        throw new Error(`Failed to load Node browser via stealth require: ${err.message}`);
+        throw new Error(`Failed to load Node browser via safe dynamic import: ${err.message}`);
       }
     } else {
       console.warn('⚠️ Env: Edge Runtime. No Browserless token provided.');

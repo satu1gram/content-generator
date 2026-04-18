@@ -282,30 +282,21 @@ export const generateCarouselImages = async (
     return publicUrls;
   }
 
-  // 💻 LOCAL / NODE LOGIC (Using Puppeteer)
+  // 💻 LOCAL / NODE LOGIC (Using Puppeteer via specialized module)
   let browser;
   try {
-    // 🛡️ STEALTH IMPORT: Hides puppeteer from Cloudflare's static analysis to prevent build errors
-    const puppeteerModule = await eval('import("puppeteer")');
-    const puppeteer = puppeteerModule.default || puppeteerModule;
-    
-    if (token) {
-      console.log('🌐 Node detected: Connecting to Remote Browser...');
-      browser = await puppeteer.connect({
-        browserWSEndpoint: `wss://chrome.browserless.io?token=${token}`,
-      });
-    } else if (!isEdge) {
-      console.log('💻 Node detected: Launching Local Puppeteer...');
-      browser = await puppeteer.launch({ 
-        headless: true, 
-        args: ['--no-sandbox', '--disable-setuid-sandbox'] 
-      });
+    // 🛡️ RUNTIME ISOLATION: 
+    // We only import the node-browser module if we are CERTAIN we are not in the Edge runtime.
+    // This prevents Cloudflare from bundling puppeteer or seeing 'eval' commands.
+    if (!isEdge) {
+      const { getBrowser } = await import('./node-browser');
+      browser = await getBrowser(token);
     } else {
       console.warn('⚠️ No token & Edge runtime. Skipping images.');
       return [];
     }
   } catch (error) {
-    console.warn('❌ Failed to initialize Puppeteer:', error);
+    console.warn('❌ Failed to initialize Node Browser:', error);
     return [];
   }
 

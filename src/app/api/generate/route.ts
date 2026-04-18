@@ -164,6 +164,11 @@ export async function POST(req: Request) {
         stage: 'overall_process', 
         runtime: isEdge ? 'edge' : 'node',
         env: process.env.NODE_ENV,
+        diagnostics: {
+          hasGemini: !!process.env.GEMINI_API_KEY,
+          hasGroq: !!process.env.GROQ_API_KEY,
+          hasSupabase: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        },
         stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
       }, 
       { status: 500 }

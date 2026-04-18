@@ -8,8 +8,13 @@ let _supabaseCache: SupabaseClient | null = null;
 const getSupabase = () => {
   if (_supabaseCache) return _supabaseCache;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-  if (!url || !key) throw new Error('❌ Supabase Env Missing.');
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  
+  if (!url || !key) {
+    console.error('❌ Supabase Config Missing: URL or Key is empty.');
+    throw new Error('Supabase configuration missing');
+  }
+  
   _supabaseCache = createClient(url, key);
   return _supabaseCache;
 };
@@ -59,7 +64,12 @@ export const fetchRepresentativeImage = async (query: string): Promise<string | 
   try {
     const response = await fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(finalQuery)}&per_page=1`, { headers: { Authorization: apiKey } });
     const data = await response.json();
-    if (data.photos && data.photos.length > 0) return data.photos[0].src.large2x;
+    if (data.photos && data.photos.length > 0) {
+      const url = data.photos[0].src.large2x;
+      console.log(`✅ Pexels Found for "${finalQuery}": ${url}`);
+      return url;
+    }
+    console.warn(`⚠️ Pexels: No photos found for "${finalQuery}"`);
   } catch (error) { console.error("❌ Pexels Failed", error); }
   return null;
 };
@@ -261,20 +271,29 @@ export const generateCarouselImages = async (
   const isEdge = process.env.NEXT_RUNTIME === 'edge';
 
   if (isEdge && token) {
-    console.log('🌐 Edge detected: Using Browserless REST API...');
     for (let i = 0; i < slides.length; i++) {
       try {
         const imageUrl = (i === 0) ? representativeImageUrl : null;
         const html = getHtmlTemplate(slides[i].title, slides[i].body, i, slides.length, imageUrl, finalTheme);
         
+        console.log(`🌐 Rendering Slide ${i+1}/${slides.length} via Browserless...`);
         const buffer = await generateViaBrowserlessRest(html, token);
         
         const fullPath = `${folderPath}/slide_${i + 1}.png`;
+        console.log(`📤 Uploading Slide ${i+1} to Supabase: ${fullPath}...`);
+        
         const { error: uploadError } = await supabase.storage.from(supabaseBucket).upload(fullPath, buffer, { contentType: 'image/png', upsert: true });
         
-        if (uploadError) { console.error(`❌ Upload failed:`, uploadError); continue; }
-        const { data: { publicUrl } } = supabase.storage.from(supabaseBucket).getPublicUrl(fullPath);
-        publicUrls.push(publicUrl);
+        if (uploadError) { 
+          console.error(`❌ Upload failed for Slide ${i+1}:`, uploadError); 
+          continue; 
+        }
+
+        const { data } = supabase.storage.from(supabaseBucket).getPublicUrl(fullPath);
+        if (data?.publicUrl) {
+          publicUrls.push(data.publicUrl);
+          console.log(`✅ Slide ${i+1} Ready: ${data.publicUrl}`);
+        }
       } catch (err) {
         console.error(`❌ Slide ${i+1} failed via REST:`, err);
       }
@@ -316,16 +335,32 @@ export const generateCarouselImages = async (
   await page.setViewport({ width: 1080, height: 1080 });
 
   for (let i = 0; i < slides.length; i++) {
-    const imageUrl = (i === 0) ? representativeImageUrl : null;
-    const html = getHtmlTemplate(slides[i].title, slides[i].body, i, slides.length, imageUrl, finalTheme);
-    await page.setContent(html);
-    await page.evaluateHandle('document.fonts.ready');
-    const buffer = await page.screenshot({ type: 'png' });
-    const fullPath = `${folderPath}/slide_${i + 1}.png`;
-    const { error: uploadError } = await supabase.storage.from(supabaseBucket).upload(fullPath, buffer, { contentType: 'image/png', upsert: true });
-    if (uploadError) { console.error(`❌ Upload failed:`, uploadError); continue; }
-    const { data: { publicUrl } } = supabase.storage.from(supabaseBucket).getPublicUrl(fullPath);
-    publicUrls.push(publicUrl);
+    try {
+      const imageUrl = (i === 0) ? representativeImageUrl : null;
+      const html = getHtmlTemplate(slides[i].title, slides[i].body, i, slides.length, imageUrl, finalTheme);
+      
+      console.log(`💻 Rendering Slide ${i+1}/${slides.length} via Puppeteer...`);
+      await page.setContent(html);
+      await page.evaluateHandle('document.fonts.ready');
+      const buffer = await page.screenshot({ type: 'png' });
+      
+      const fullPath = `${folderPath}/slide_${i + 1}.png`;
+      console.log(`📤 Uploading Slide ${i+1} to Supabase: ${fullPath}...`);
+      
+      const { error: uploadError } = await supabase.storage.from(supabaseBucket).upload(fullPath, buffer, { contentType: 'image/png', upsert: true });
+      if (uploadError) { 
+        console.error(`❌ Upload failed for Slide ${i+1}:`, uploadError); 
+        continue; 
+      }
+
+      const { data } = supabase.storage.from(supabaseBucket).getPublicUrl(fullPath);
+      if (data?.publicUrl) {
+        publicUrls.push(data.publicUrl);
+        console.log(`✅ Slide ${i+1} Ready: ${data.publicUrl}`);
+      }
+    } catch (err) {
+      console.error(`❌ Local Rendering Error Slide ${i+1}:`, err);
+    }
   }
 
   await browser.close();

@@ -269,6 +269,10 @@ export const generateCarouselImages = async (
   // 🛡️ ISOMORPHIC LOGIC
   const token = process.env.BROWSERLESS_TOKEN;
   const isEdge = process.env.NEXT_RUNTIME === 'edge';
+  
+  if (isEdge) {
+    console.log(`🌐 Cloudflare Edge Runtime Detected. Token present: ${!!token}`);
+  }
 
   if (isEdge && token) {
     for (let i = 0; i < slides.length; i++) {

@@ -24,11 +24,20 @@ export async function POST(req: Request) {
       );
     }
 
-    const { prompt } = await req.json();
+    let body: any;
+    try {
+      body = await req.json();
+    } catch (e) {
+      console.error('❌ Request Body Parse Failed');
+      return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
+    }
 
+    const { prompt } = body;
     if (!prompt) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
     }
+
+    console.log('🏁 Starting Generation for prompt:', prompt.slice(0, 50) + '...');
 
     // 2. Resilient Generation Loop (Gemini -> Groq Fallback)
     let parsedData: any = null;
@@ -70,8 +79,11 @@ export async function POST(req: Request) {
     }
 
     if (!parsedData) {
+      console.error('❌ Stage AI: No data returned');
       throw new Error('API returned no valid data after multiple attempts.');
     }
+    
+    console.log('✅ Stage AI: Content Generated Successfully');
     
     // 4. Robust Data Normalization
     try {
@@ -119,15 +131,17 @@ export async function POST(req: Request) {
       // 4. Generate Carousel Images & Upload
       let imageUrls: string[] = [];
       try {
+        console.log('🎨 Stage Images: Starting Visual Generation...');
         const result = await generateCarouselImages(
           normalizedData.carousel_slides, 
           normalizedData.visual_theme
         );
         if (Array.isArray(result)) {
           imageUrls = result;
+          console.log(`✅ Stage Images: Generated ${imageUrls.length} assets`);
         }
       } catch (carouselError) {
-        console.error('Failed to generate carousel images:', carouselError);
+        console.error('❌ Stage Images Failed:', carouselError);
       }
 
       return NextResponse.json({

@@ -5,8 +5,7 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export const MODELS = [
   "gemini-1.5-flash",
-  "gemini-1.5-pro",
-  "gemini-pro"
+  "gemini-1.5-pro"
 ];
 
 export const GEMINI_MODEL = MODELS[0];
@@ -91,19 +90,13 @@ export async function generateWithFallback(prompt: string, retryCount = 0): Prom
   
   for (const modelName of MODELS) {
     try {
-      const isLegacy = modelName === 'gemini-pro';
-      
       const model = genAI.getGenerativeModel({ 
         model: modelName,
-        ...(isLegacy ? {} : { systemInstruction: SYSTEM_PROMPT }),
+        systemInstruction: SYSTEM_PROMPT,
       });
 
-      const finalPrompt = isLegacy 
-        ? `${SYSTEM_PROMPT}\n\nUSER INPUT:\n${prompt}`
-        : prompt;
-
       const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: finalPrompt }] }],
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
         generationConfig: {
           responseMimeType: "application/json",
         }

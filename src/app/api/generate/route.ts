@@ -128,9 +128,9 @@ export async function POST(req: Request) {
         generated_images: imageUrls
       });
     } catch (parseError: any) {
-      console.error('Failed to parse Gemini response as JSON:', content);
+      console.error('Failed to normalize AI response:', parseError.message);
       return NextResponse.json(
-        { error: 'Generated content is not valid JSON', raw: content },
+        { error: 'Failed to normalize AI response', details: parseError.message },
         { status: 500 }
       );
     }

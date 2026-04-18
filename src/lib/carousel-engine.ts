@@ -285,18 +285,23 @@ export const generateCarouselImages = async (
   // 💻 LOCAL / NODE LOGIC (Using Puppeteer via specialized module)
   let browser;
   try {
-    // 🛡️ TOTAL ISOLATION: 
-    // We use a root-level module and eval('require') to hide this from the Next.js/Edge bundler.
+    // 🛡️ TOTAL STEALTH ISOLATION: 
+    // We use eval('require') to completely hide Node.js internals from the Next.js/Edge static analyzer.
     if (!isEdge) {
       console.log('💻 Env: Local Node. Loading isolated browser utility...');
       
-      // We use createRequire inside the block so Edge doesn't see the top-level import
-      const { createRequire } = await import('module');
-      const require = createRequire(import.meta.url);
-      
-      // Path is outside 'src' to prevent bundler scans
-      const nodeBrowser = require('../../../node-utils/node-browser.js');
-      browser = await nodeBrowser.getBrowser(token);
+      try {
+        // This trick ensures the bundler doesn't see 'require' or 'module'
+        const req = eval('require');
+        const { createRequire } = req('module');
+        const localRequire = createRequire(import.meta.url);
+        
+        // Path is outside 'src' to prevent bundler scans
+        const nodeBrowser = localRequire('../../../node-utils/node-browser.js');
+        browser = await nodeBrowser.getBrowser(token);
+      } catch (err: any) {
+        throw new Error(`Failed to load Node browser via stealth require: ${err.message}`);
+      }
     } else {
       console.warn('⚠️ Env: Edge Runtime. No Browserless token provided.');
       return [];

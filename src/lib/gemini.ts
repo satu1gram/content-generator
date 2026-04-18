@@ -4,11 +4,10 @@ import productsData from './bp-knowledge.json';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export const MODELS = [
+  "gemini-1.5-flash-latest",
   "gemini-1.5-flash",
-  "gemini-1.5-flash-002",
-  "gemini-1.5-flash-8b",
+  "gemini-1.5-pro-latest",
   "gemini-1.5-pro",
-  "gemini-1.5-pro-002",
   "gemini-pro"
 ];
 

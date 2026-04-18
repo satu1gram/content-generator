@@ -9,10 +9,17 @@ export async function POST(req: Request) {
     // 1. Environmental Validation - Secure at least one heart
     const hasGemini = !!process.env.GEMINI_API_KEY;
     const hasGroq = !!process.env.GROQ_API_KEY;
+    const isEdge = process.env.NEXT_RUNTIME === 'edge';
 
     if (!hasGemini && !hasGroq) {
+      console.error('❌ Missing API Credentials. Runtime:', isEdge ? 'Edge' : 'Node');
       return NextResponse.json(
-        { error: 'AI_CONFIGURATION_MISSING: Silakan masukkan GEMINI_API_KEY atau GROQ_API_KEY di .env.local' },
+        { 
+          error: 'AI_CONFIGURATION_MISSING', 
+          message: 'Peringatan: API Key (Gemini/Groq) belum terpasang di Cloudflare Dashboard.',
+          required_vars: ['GEMINI_API_KEY', 'GROQ_API_KEY'],
+          runtime: isEdge ? 'edge' : 'node'
+        },
         { status: 500 }
       );
     }

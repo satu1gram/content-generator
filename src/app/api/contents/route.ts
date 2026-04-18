@@ -5,7 +5,15 @@ import { supabase, supabaseAdmin } from '@/lib/supabase';
 export async function GET() {
   try {
     const client = supabaseAdmin || supabase;
-    if (!client) return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
+    if (!client) {
+      return NextResponse.json(
+        { 
+          error: 'SUPABASE_NOT_CONFIGURED',
+          message: 'Database Supabase belum terhubung. Silakan masukkan NEXT_PUBLIC_SUPABASE_URL dan KEY di Cloudflare Dashboard.' 
+        }, 
+        { status: 500 }
+      );
+    }
     
     // Fetch with a direct join to be more robust than the view
     const { data, error } = await client
@@ -39,7 +47,15 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const client = supabaseAdmin || supabase;
-    if (!client) return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
+    if (!client) {
+      return NextResponse.json(
+        { 
+          error: 'SUPABASE_NOT_CONFIGURED',
+          message: 'Database Supabase belum terhubung. Silakan masukkan NEXT_PUBLIC_SUPABASE_URL dan KEY di Cloudflare Dashboard.' 
+        }, 
+        { status: 500 }
+      );
+    }
 
     const body = await req.json();
     
@@ -92,7 +108,15 @@ export async function POST(req: Request) {
 export async function PUT(req: Request) {
   try {
     const client = supabaseAdmin || supabase;
-    if (!client) return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
+    if (!client) {
+      return NextResponse.json(
+        { 
+          error: 'SUPABASE_NOT_CONFIGURED',
+          message: 'Database Supabase belum terhubung. Silakan masukkan NEXT_PUBLIC_SUPABASE_URL dan KEY di Cloudflare Dashboard.' 
+        }, 
+        { status: 500 }
+      );
+    }
 
     const body = await req.json();
     const { id, ...updates } = body;

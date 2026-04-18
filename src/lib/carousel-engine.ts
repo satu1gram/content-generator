@@ -285,7 +285,10 @@ export const generateCarouselImages = async (
   // 💻 LOCAL / NODE LOGIC (Using Puppeteer)
   let browser;
   try {
-    const puppeteer = await import('puppeteer').then(m => m.default || m);
+    // 🛡️ STEALTH IMPORT: Hides puppeteer from Cloudflare's static analysis to prevent build errors
+    const puppeteerModule = await eval('import("puppeteer")');
+    const puppeteer = puppeteerModule.default || puppeteerModule;
+    
     if (token) {
       console.log('🌐 Node detected: Connecting to Remote Browser...');
       browser = await puppeteer.connect({

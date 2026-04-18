@@ -309,21 +309,20 @@ export const generateCarouselImages = async (
   let browser;
   try {
     if (!isEdge) {
-      console.log('💻 Env: Local Node. Loading bridge via total isolation...');
+      console.log('💻 Env: Local Node. Loading bridge via clean dynamic import...');
       
       try {
-        // 🧪 TOTAL STEALTH ISOLATION:
-        // We use eval('require') so the Cloudflare static analyzer 
-        // completely ignores this line during build-time.
-        const hiddenRequire = eval('require');
-        const path = hiddenRequire('path');
-        const bridgePath = path.resolve(process.cwd(), 'node-utils/node-browser.js');
-        const nodeBrowser = hiddenRequire(bridgePath);
+        // 🧪 CLEAN ISOMORPHIC ISOLATION:
+        // We avoid eval() and process.cwd() entirely to satisfy Cloudflare/Turbopack.
+        // Dynamic string construction prevents build-time static analysis from following the path.
+        const folder = 'node-utils';
+        const moduleName = 'node-browser.js';
+        const nodeBrowser = await import(`../../${folder}/${moduleName}`);
         
         const getBrowser = nodeBrowser.getBrowser || nodeBrowser.default?.getBrowser || nodeBrowser;
         browser = await getBrowser(token);
       } catch (err: any) {
-        throw new Error(`Failed to load Node browser via stealth: ${err.message}`);
+        throw new Error(`Failed to load Node browser via clean bridge: ${err.message}`);
       }
     } else {
       console.warn('⚠️ Env: Edge Runtime. No Browserless token provided.');

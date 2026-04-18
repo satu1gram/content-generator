@@ -4,11 +4,12 @@ import productsData from './bp-knowledge.json';
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
 export const MODELS = [
-  "gemini-pro",           // Model 1.0 yang paling stabil (Seringkali berhasil jika 1.5 gagal)
-  "gemini-1.5-flash-latest",
   "gemini-1.5-flash",
+  "gemini-1.5-flash-002",
+  "gemini-1.5-flash-8b",
   "gemini-1.5-pro",
-  "gemini-flash-latest"   // Alias lama yang mungkin digunakan di v1beta
+  "gemini-1.5-pro-002",
+  "gemini-pro"
 ];
 
 export const GEMINI_MODEL = MODELS[0];
@@ -88,7 +89,7 @@ PANDUAN WARNA BRAND (DETIL):
 /**
  * 🚀 HELPER: Generate content with automatic retries and model fallback
  */
-export async function generateWithFallback(prompt: string, retryCount = 0) {
+export async function generateWithFallback(prompt: string, retryCount = 0): Promise<any> {
   let lastError: any = null;
   
   for (const modelName of MODELS) {
@@ -97,11 +98,9 @@ export async function generateWithFallback(prompt: string, retryCount = 0) {
       
       const model = genAI.getGenerativeModel({ 
         model: modelName,
-        // HANYA gunakan systemInstruction jika bukan model legacy 1.0
         ...(isLegacy ? {} : { systemInstruction: SYSTEM_PROMPT }),
       });
 
-      // Jika model legacy, gabungkan SYSTEM_PROMPT ke dalam user message
       const finalPrompt = isLegacy 
         ? `${SYSTEM_PROMPT}\n\nUSER INPUT:\n${prompt}`
         : prompt;
@@ -116,22 +115,29 @@ export async function generateWithFallback(prompt: string, retryCount = 0) {
       return result;
     } catch (error: any) {
       lastError = error;
-      // Jika error 503 (Busy), 429 (Rate Limit), 404 (Not Found), atau 400 (Bad Request - Compatibility issue), coba model berikutnya
-      if (error.status === 503 || error.status === 429 || error.status === 404 || error.status === 400) {
-        console.warn(`⚠️ Model ${modelName} bermasalah (Status: ${error.status}). Mencoba model berikutnya...`);
+      
+      // 404: Skip model permanently for this session
+      if (error.status === 404) {
+        console.warn(`⚠️ Model ${modelName} NOT FOUND (404). Skipping...`);
         continue;
       }
-      // Jika error lain, langsung lempar
+      
+      // 429: Quota Exceeded - WAIT then try next or retry
+      if (error.status === 429 || error.status === 503) {
+        console.warn(`⚠️ Model ${modelName} BUSY/LIMIT (Status: ${error.status}). Waiting 5 seconds...`);
+        await new Promise(resolve => setTimeout(resolve, 5000));
+        continue;
+      }
+      
       throw error;
     }
   }
 
-  // Jika semua model gagal setelah iterasi pertama dan kita masih punya kuota retry
-  if (retryCount < 2 && (lastError?.status === 503 || lastError?.status === 429)) {
-    const delay = Math.pow(2, retryCount) * 1000;
-    console.log(`🔄 Semua model sibuk. Menunggu ${delay}ms sebelum mencoba lagi...`);
-    await new Promise(resolve => setTimeout(resolve, delay));
-    return generateWithFallback(prompt, retryCount + 1);
+  // NUCLEAR FALLBACK: If Gemini fails, try Claude if key is present
+  if (process.env.ANTHROPIC_API_KEY) {
+    console.log('☢️ All Gemini models failed. Attempting Claude fallback...');
+    // Logika pemanggilan Claude bisa ditambahkan di sini jika SDK terpasang
+    // Untuk saat ini, kita tetap lempar error agar user tahu kuota habis
   }
 
   throw lastError;

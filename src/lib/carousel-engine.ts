@@ -213,7 +213,7 @@ const getHtmlTemplate = (
 const generateViaBrowserlessRest = async (
   html: string,
   token: string
-): Promise<Buffer> => {
+): Promise<Uint8Array> => {
   const response = await fetch(`https://chrome.browserless.io/screenshot?token=${token}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -234,7 +234,7 @@ const generateViaBrowserlessRest = async (
   }
 
   const arrayBuffer = await response.arrayBuffer();
-  return Buffer.from(arrayBuffer);
+  return new Uint8Array(arrayBuffer);
 };
 
 /**

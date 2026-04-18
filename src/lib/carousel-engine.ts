@@ -208,6 +208,36 @@ const getHtmlTemplate = (
 };
 
 /**
+ * 🌐 REST: Browserless Screenshot (Edge Compatible)
+ */
+const generateViaBrowserlessRest = async (
+  html: string,
+  token: string
+): Promise<Buffer> => {
+  const response = await fetch(`https://chrome.browserless.io/screenshot?token=${token}`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      html,
+      options: {
+        type: 'png',
+        fullPage: false,
+        clip: { x: 0, y: 0, width: 1080, height: 1080 }
+      },
+      viewport: { width: 1080, height: 1080 }
+    })
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`❌ Browserless REST Failed: ${errorText}`);
+  }
+
+  const arrayBuffer = await response.arrayBuffer();
+  return Buffer.from(arrayBuffer);
+};
+
+/**
  * 🚀 ENGINE: Generate Images
  */
 export const generateCarouselImages = async (
@@ -223,41 +253,61 @@ export const generateCarouselImages = async (
   const folderPath = `production/carousel_${timestamp}_${sessionId}`;
   const publicUrls: string[] = [];
 
-  let browser;
+  let representativeImageUrl = slides[0]?.image_search_query ? await fetchRepresentativeImage(slides[0].image_search_query) : null;
+  console.log(`🎨 Branding Applied: ${finalTheme.decoration.toUpperCase()} | Uploading to ${folderPath}...`);
 
-  // 🛡️ ISOMORPHIC BROWSER BRIDGE
+  // 🛡️ ISOMORPHIC LOGIC
+  const token = process.env.BROWSERLESS_TOKEN;
+  const isEdge = process.env.NEXT_RUNTIME === 'edge';
+
+  if (isEdge && token) {
+    console.log('🌐 Edge detected: Using Browserless REST API...');
+    for (let i = 0; i < slides.length; i++) {
+      try {
+        const imageUrl = (i === 0) ? representativeImageUrl : null;
+        const html = getHtmlTemplate(slides[i].title, slides[i].body, i, slides.length, imageUrl, finalTheme);
+        
+        const buffer = await generateViaBrowserlessRest(html, token);
+        
+        const fullPath = `${folderPath}/slide_${i + 1}.png`;
+        const { error: uploadError } = await supabase.storage.from(supabaseBucket).upload(fullPath, buffer, { contentType: 'image/png', upsert: true });
+        
+        if (uploadError) { console.error(`❌ Upload failed:`, uploadError); continue; }
+        const { data: { publicUrl } } = supabase.storage.from(supabaseBucket).getPublicUrl(fullPath);
+        publicUrls.push(publicUrl);
+      } catch (err) {
+        console.error(`❌ Slide ${i+1} failed via REST:`, err);
+      }
+    }
+    return publicUrls;
+  }
+
+  // 💻 LOCAL / NODE LOGIC (Using Puppeteer)
+  let browser;
   try {
     const puppeteer = await import('puppeteer').then(m => m.default || m);
-    
-    // 🌐 Option A: Remote Browser (Cloudflare compatible)
-    if (process.env.BROWSERLESS_TOKEN) {
-      console.log('🌐 Connecting to Remote Browser (Browserless)...');
+    if (token) {
+      console.log('🌐 Node detected: Connecting to Remote Browser...');
       browser = await puppeteer.connect({
-        browserWSEndpoint: `wss://chrome.browserless.io?token=${process.env.BROWSERLESS_TOKEN}`,
+        browserWSEndpoint: `wss://chrome.browserless.io?token=${token}`,
       });
-    } 
-    // 💻 Option B: Local Browser (Local Dev only)
-    else if (process.env.NEXT_RUNTIME !== 'edge') {
-      console.log('💻 Launching Local Puppeteer...');
+    } else if (!isEdge) {
+      console.log('💻 Node detected: Launching Local Puppeteer...');
       browser = await puppeteer.launch({ 
         headless: true, 
         args: ['--no-sandbox', '--disable-setuid-sandbox'] 
       });
-    } 
-    // ⚠️ Fallback: No browser available in this environment
-    else {
-      console.warn('⚠️ No browser available. Skipping image generation on Cloudflare Edge.');
-      return []; // Return early without crashing
+    } else {
+      console.warn('⚠️ No token & Edge runtime. Skipping images.');
+      return [];
     }
   } catch (error) {
-    console.warn('❌ Failed to initialize browser:', error);
-    return []; // Return early without crashing
+    console.warn('❌ Failed to initialize Puppeteer:', error);
+    return [];
   }
+
   const page = await browser.newPage();
   await page.setViewport({ width: 1080, height: 1080 });
-
-  let representativeImageUrl = slides[0]?.image_search_query ? await fetchRepresentativeImage(slides[0].image_search_query) : null;
-  console.log(`🎨 Branding Applied: ${finalTheme.decoration.toUpperCase()} | Uploading to ${folderPath}...`);
 
   for (let i = 0; i < slides.length; i++) {
     const imageUrl = (i === 0) ? representativeImageUrl : null;

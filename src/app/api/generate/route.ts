@@ -99,11 +99,14 @@ export async function POST(req: Request) {
       );
     }
   } catch (error: any) {
+    const isEdge = process.env.NEXT_RUNTIME === 'edge';
     console.error('API Error Stage:', error.stack || error.message);
     return NextResponse.json(
       { 
         error: error.message, 
         stage: 'overall_process', 
+        runtime: isEdge ? 'edge' : 'node',
+        env: process.env.NODE_ENV,
         stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
       }, 
       { status: 500 }

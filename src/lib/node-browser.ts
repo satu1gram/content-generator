@@ -1,20 +1,22 @@
+// 💻 NODE-ONLY UTILITY
 import puppeteer from 'puppeteer';
 
 /**
- * 💻 NODE-ONLY: Launch or Connect to Browser
- * This file should NEVER be imported in the Edge Runtime.
+ * Encapsulated browser launcher to prevent leakage.
  */
-export const getBrowser = async (token?: string) => {
-  if (token) {
-    console.log('🌐 Node Environment: Connecting to Remote Browser...');
-    return await puppeteer.connect({
-      browserWSEndpoint: `wss://chrome.browserless.io?token=${token}`,
+module.exports = {
+  getBrowser: async (token?: string) => {
+    if (token) {
+      console.log('🌐 Remote Sync: Connecting via Browserless...');
+      return await puppeteer.connect({
+        browserWSEndpoint: `wss://chrome.browserless.io?token=${token}`,
+      });
+    }
+
+    console.log('💻 Local Sync: Launching Puppeteer...');
+    return await puppeteer.launch({ 
+      headless: true, 
+      args: ['--no-sandbox', '--disable-setuid-sandbox'] 
     });
   }
-
-  console.log('💻 Node Environment: Launching Local Puppeteer...');
-  return await puppeteer.launch({ 
-    headless: true, 
-    args: ['--no-sandbox', '--disable-setuid-sandbox'] 
-  });
 };

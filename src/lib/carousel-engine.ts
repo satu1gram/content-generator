@@ -286,18 +286,22 @@ export const generateCarouselImages = async (
   let browser;
   try {
     // 🛡️ RUNTIME ISOLATION: 
-    // We only import the node-browser module if we are CERTAIN we are not in the Edge runtime.
-    // This prevents Cloudflare from bundling puppeteer or seeing 'eval' commands.
+    // We use a specific check to prevent Cloudflare from even attempting to scan this block.
     if (!isEdge) {
-      console.log('💻 Environment: Local Node detected. Loading Puppeteer module...');
-      const { getBrowser } = await import('@/lib/node-browser');
+      console.log('💻 Env: Local Node. Loading browser utility...');
+      // Using a local variable for the path to further hide it from some static analyzers
+      const modulePath = '@/lib/node-browser';
+      const nodeBrowser = await import(modulePath);
+      
+      // Handle both CommonJS and ESM styles
+      const getBrowser = nodeBrowser.getBrowser || nodeBrowser.default?.getBrowser || nodeBrowser;
       browser = await getBrowser(token);
     } else {
-      console.warn('⚠️ Environment: Edge runtime detected without Browserless token. Skipping images.');
+      console.warn('⚠️ Env: Edge Runtime. No Browserless token provided.');
       return [];
     }
   } catch (error: any) {
-    console.error('❌ Failed to initialize Node Browser:', error.message);
+    console.error('❌ Isomorphic Bridge Error:', error.message);
     return [];
   }
 

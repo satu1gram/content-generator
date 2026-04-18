@@ -25,6 +25,10 @@ export async function POST(req: Request) {
     const response = await result.response;
     const content = response.text();
     
+    if (!content) {
+      throw new Error('Gemini API returned an empty response.');
+    }
+    
     // 3. Robust Response Handling
     try {
       const parsedData = JSON.parse(content);
@@ -95,7 +99,14 @@ export async function POST(req: Request) {
       );
     }
   } catch (error: any) {
-    console.error('Gemini API Error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    console.error('API Error Stage:', error.stack || error.message);
+    return NextResponse.json(
+      { 
+        error: error.message, 
+        stage: 'overall_process', 
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
+      }, 
+      { status: 500 }
+    );
   }
 }

@@ -93,13 +93,21 @@ export async function generateWithFallback(prompt: string, retryCount = 0) {
   
   for (const modelName of MODELS) {
     try {
+      const isLegacy = modelName === 'gemini-pro';
+      
       const model = genAI.getGenerativeModel({ 
         model: modelName,
-        systemInstruction: SYSTEM_PROMPT,
+        // HANYA gunakan systemInstruction jika bukan model legacy 1.0
+        ...(isLegacy ? {} : { systemInstruction: SYSTEM_PROMPT }),
       });
 
+      // Jika model legacy, gabungkan SYSTEM_PROMPT ke dalam user message
+      const finalPrompt = isLegacy 
+        ? `${SYSTEM_PROMPT}\n\nUSER INPUT:\n${prompt}`
+        : prompt;
+
       const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        contents: [{ role: 'user', parts: [{ text: finalPrompt }] }],
         generationConfig: {
           responseMimeType: "application/json",
         }
@@ -108,8 +116,8 @@ export async function generateWithFallback(prompt: string, retryCount = 0) {
       return result;
     } catch (error: any) {
       lastError = error;
-      // Jika error 503 (Busy), 429 (Rate Limit), atau 404 (Model Not Found), coba model berikutnya
-      if (error.status === 503 || error.status === 429 || error.status === 404) {
+      // Jika error 503 (Busy), 429 (Rate Limit), 404 (Not Found), atau 400 (Bad Request - Compatibility issue), coba model berikutnya
+      if (error.status === 503 || error.status === 429 || error.status === 404 || error.status === 400) {
         console.warn(`⚠️ Model ${modelName} bermasalah (Status: ${error.status}). Mencoba model berikutnya...`);
         continue;
       }

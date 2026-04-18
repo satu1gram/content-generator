@@ -289,14 +289,15 @@ export const generateCarouselImages = async (
     // We only import the node-browser module if we are CERTAIN we are not in the Edge runtime.
     // This prevents Cloudflare from bundling puppeteer or seeing 'eval' commands.
     if (!isEdge) {
-      const { getBrowser } = await import('./node-browser');
+      console.log('💻 Environment: Local Node detected. Loading Puppeteer module...');
+      const { getBrowser } = await import('@/lib/node-browser');
       browser = await getBrowser(token);
     } else {
-      console.warn('⚠️ No token & Edge runtime. Skipping images.');
+      console.warn('⚠️ Environment: Edge runtime detected without Browserless token. Skipping images.');
       return [];
     }
-  } catch (error) {
-    console.warn('❌ Failed to initialize Node Browser:', error);
+  } catch (error: any) {
+    console.error('❌ Failed to initialize Node Browser:', error.message);
     return [];
   }
 

@@ -285,17 +285,18 @@ export const generateCarouselImages = async (
   // 💻 LOCAL / NODE LOGIC (Using Puppeteer via specialized module)
   let browser;
   try {
-    // 🛡️ RUNTIME ISOLATION: 
-    // We use a specific check to prevent Cloudflare from even attempting to scan this block.
+    // 🛡️ TOTAL ISOLATION: 
+    // We use a root-level module and eval('require') to hide this from the Next.js/Edge bundler.
     if (!isEdge) {
-      console.log('💻 Env: Local Node. Loading browser utility...');
-      // Using a local variable for the path to further hide it from some static analyzers
-      const modulePath = '@/lib/node-browser';
-      const nodeBrowser = await import(modulePath);
+      console.log('💻 Env: Local Node. Loading isolated browser utility...');
       
-      // Handle both CommonJS and ESM styles
-      const getBrowser = nodeBrowser.getBrowser || nodeBrowser.default?.getBrowser || nodeBrowser;
-      browser = await getBrowser(token);
+      // We use createRequire inside the block so Edge doesn't see the top-level import
+      const { createRequire } = await import('module');
+      const require = createRequire(import.meta.url);
+      
+      // Path is outside 'src' to prevent bundler scans
+      const nodeBrowser = require('../../../node-utils/node-browser.js');
+      browser = await nodeBrowser.getBrowser(token);
     } else {
       console.warn('⚠️ Env: Edge Runtime. No Browserless token provided.');
       return [];

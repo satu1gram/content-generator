@@ -1,19 +1,19 @@
-// 💻 NODE-ONLY UTILITY
-import puppeteer from 'puppeteer';
+// 🧪 NODE-ONLY UTILITY (OUTSIDE SRC)
+const puppeteer = require('puppeteer');
 
 /**
- * Encapsulated browser launcher to prevent leakage.
+ * Launch or connect to local browser.
  */
 module.exports = {
-  getBrowser: async (token?: string) => {
+  getBrowser: async (token) => {
     if (token) {
-      console.log('🌐 Remote Sync: Connecting via Browserless...');
+      console.log('🌐 Remote Node Sync: Connecting via Browserless...');
       return await puppeteer.connect({
         browserWSEndpoint: `wss://chrome.browserless.io?token=${token}`,
       });
     }
 
-    console.log('💻 Local Sync: Launching Puppeteer...');
+    console.log('💻 Local Node Sync: Launching Puppeteer...');
     return await puppeteer.launch({ 
       headless: true, 
       args: ['--no-sandbox', '--disable-setuid-sandbox'] 

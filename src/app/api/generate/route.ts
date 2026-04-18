@@ -1,14 +1,18 @@
 export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import genAI, { SYSTEM_PROMPT, MODELS, generateWithFallback } from '@/lib/gemini';
+import { generateWithGroq } from '@/lib/groq';
 import { generateCarouselImages, splitTextToSlides } from '@/lib/carousel-engine';
 
 export async function POST(req: Request) {
   try {
-    // 1. API Key Validation
-    if (!process.env.GEMINI_API_KEY) {
+    // 1. Environmental Validation - Secure at least one heart
+    const hasGemini = !!process.env.GEMINI_API_KEY;
+    const hasGroq = !!process.env.GROQ_API_KEY;
+
+    if (!hasGemini && !hasGroq) {
       return NextResponse.json(
-        { error: 'GEMINI_API_KEY is missing in environmental variables. Please check .env.local' },
+        { error: 'AI_CONFIGURATION_MISSING: Silakan masukkan GEMINI_API_KEY atau GROQ_API_KEY di .env.local' },
         { status: 500 }
       );
     }
@@ -19,19 +23,51 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
     }
 
-    // 2. Resilient Gemini API Call
-    const result = await generateWithFallback(prompt);
+    // 2. Resilient Generation Loop (Gemini -> Groq Fallback)
+    let parsedData: any = null;
+    let fallbackToGroq = false;
 
-    const response = await result.response;
-    const content = response.text();
-    
-    if (!content) {
-      throw new Error('Gemini API returned an empty response.');
+    if (hasGemini) {
+      try {
+        console.log('💎 Attempting Gemini Generation...');
+        const result = await generateWithFallback(prompt);
+        const response = await result.response;
+        const content = response.text();
+        
+        if (content) {
+          parsedData = JSON.parse(content);
+        } else {
+          fallbackToGroq = true;
+        }
+      } catch (geminiError: any) {
+        console.warn('⚠️ Gemini Failed:', geminiError.message);
+        if (hasGroq) {
+          fallbackToGroq = true;
+        } else {
+          throw geminiError;
+        }
+      }
+    } else {
+      fallbackToGroq = true;
+    }
+
+    // 3. Groq Fallback Execution
+    if (fallbackToGroq && hasGroq) {
+      try {
+        console.log('⚡ Using Groq (Llama 3) as Fallback...');
+        parsedData = await generateWithGroq(prompt, SYSTEM_PROMPT);
+      } catch (groqError: any) {
+        console.error('❌ Groq Failed:', groqError.message);
+        throw new Error(`Kritikal: Semua AI Gagal. (Groq: ${groqError.message})`);
+      }
+    }
+
+    if (!parsedData) {
+      throw new Error('API returned no valid data after multiple attempts.');
     }
     
-    // 3. Robust Response Handling
+    // 4. Robust Data Normalization
     try {
-      const parsedData = JSON.parse(content);
       
       // Normalize data to ensure it matches the expected interface
       const normalizedData = {

@@ -266,93 +266,28 @@ export const generateCarouselImages = async (
   let representativeImageUrl = slides[0]?.image_search_query ? await fetchRepresentativeImage(slides[0].image_search_query) : null;
   console.log(`🎨 Branding Applied: ${finalTheme.decoration.toUpperCase()} | Uploading to ${folderPath}...`);
 
-  // 🛡️ ISOMORPHIC LOGIC
   const token = process.env.BROWSERLESS_TOKEN;
-  const isEdge = process.env.NEXT_RUNTIME === 'edge';
-  
-  if (isEdge) {
-    console.log(`🌐 Cloudflare Edge Runtime Detected. Token present: ${!!token}`);
-  }
-
-  if (isEdge && token) {
-    for (let i = 0; i < slides.length; i++) {
-      try {
-        const imageUrl = (i === 0) ? representativeImageUrl : null;
-        const html = getHtmlTemplate(slides[i].title, slides[i].body, i, slides.length, imageUrl, finalTheme);
-        
-        console.log(`🌐 Rendering Slide ${i+1}/${slides.length} via Browserless...`);
-        const buffer = await generateViaBrowserlessRest(html, token);
-        
-        const fullPath = `${folderPath}/slide_${i + 1}.png`;
-        console.log(`📤 Uploading Slide ${i+1} to Supabase: ${fullPath}...`);
-        
-        const { error: uploadError } = await supabase.storage.from(supabaseBucket).upload(fullPath, buffer, { contentType: 'image/png', upsert: true });
-        
-        if (uploadError) { 
-          console.error(`❌ Upload failed for Slide ${i+1}:`, uploadError); 
-          continue; 
-        }
-
-        const { data } = supabase.storage.from(supabaseBucket).getPublicUrl(fullPath);
-        if (data?.publicUrl) {
-          publicUrls.push(data.publicUrl);
-          console.log(`✅ Slide ${i+1} Ready: ${data.publicUrl}`);
-        }
-      } catch (err) {
-        console.error(`❌ Slide ${i+1} failed via REST:`, err);
-      }
-    }
-    return publicUrls;
-  }
-
-  // 💻 LOCAL / NODE LOGIC (Using Puppeteer via specialized bridge)
-  let browser;
-  try {
-    if (!isEdge) {
-      console.log('💻 Env: Local Node. Loading bridge via clean dynamic import...');
-      
-      try {
-        // 🧪 CLEAN ISOMORPHIC ISOLATION:
-        // We avoid eval() and process.cwd() entirely to satisfy Cloudflare/Turbopack.
-        // Dynamic string construction prevents build-time static analysis from following the path.
-        const folder = 'node-utils';
-        const moduleName = 'node-browser.js';
-        const nodeBrowser = await import(`../../${folder}/${moduleName}`);
-        
-        const getBrowser = nodeBrowser.getBrowser || nodeBrowser.default?.getBrowser || nodeBrowser;
-        browser = await getBrowser(token);
-      } catch (err: any) {
-        throw new Error(`Failed to load Node browser via clean bridge: ${err.message}`);
-      }
-    } else {
-      console.warn('⚠️ Env: Edge Runtime. No Browserless token provided.');
-      return [];
-    }
-  } catch (error: any) {
-    console.error('❌ Isomorphic Bridge Error:', error.message);
+  if (!token) {
+    console.warn('⚠️ BROWSERLESS_TOKEN missing — skipping carousel image generation.');
     return [];
   }
-
-  const page = await browser.newPage();
-  await page.setViewport({ width: 1080, height: 1080 });
 
   for (let i = 0; i < slides.length; i++) {
     try {
       const imageUrl = (i === 0) ? representativeImageUrl : null;
       const html = getHtmlTemplate(slides[i].title, slides[i].body, i, slides.length, imageUrl, finalTheme);
-      
-      console.log(`💻 Rendering Slide ${i+1}/${slides.length} via Puppeteer...`);
-      await page.setContent(html);
-      await page.evaluateHandle('document.fonts.ready');
-      const buffer = await page.screenshot({ type: 'png' });
-      
+
+      console.log(`🌐 Rendering Slide ${i+1}/${slides.length} via Browserless...`);
+      const buffer = await generateViaBrowserlessRest(html, token);
+
       const fullPath = `${folderPath}/slide_${i + 1}.png`;
       console.log(`📤 Uploading Slide ${i+1} to Supabase: ${fullPath}...`);
-      
+
       const { error: uploadError } = await supabase.storage.from(supabaseBucket).upload(fullPath, buffer, { contentType: 'image/png', upsert: true });
-      if (uploadError) { 
-        console.error(`❌ Upload failed for Slide ${i+1}:`, uploadError); 
-        continue; 
+
+      if (uploadError) {
+        console.error(`❌ Upload failed for Slide ${i+1}:`, uploadError);
+        continue;
       }
 
       const { data } = supabase.storage.from(supabaseBucket).getPublicUrl(fullPath);
@@ -361,10 +296,8 @@ export const generateCarouselImages = async (
         console.log(`✅ Slide ${i+1} Ready: ${data.publicUrl}`);
       }
     } catch (err) {
-      console.error(`❌ Local Rendering Error Slide ${i+1}:`, err);
+      console.error(`❌ Slide ${i+1} failed:`, err);
     }
   }
-
-  await browser.close();
   return publicUrls;
 };

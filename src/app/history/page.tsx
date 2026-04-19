@@ -58,7 +58,7 @@ export default function HistoryPage() {
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-[#E8E5DF] pb-10">
         <div className="space-y-3">
           <Link href="/" className="flex items-center gap-2 text-[10px] font-bold text-[#9B8EA0] uppercase tracking-[0.2em] hover:text-[#00A896] transition-colors mb-3">
-            <ArrowLeft size={12} /> Back to Dashboard
+            <ArrowLeft size={12} /> Back to Create
           </Link>
           <h1 className="text-4xl md:text-5xl font-serif text-[#1C1C1E] leading-tight max-w-2xl">
             Historical <span className="text-[#00A896] italic">Archives</span>.

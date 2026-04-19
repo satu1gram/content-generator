@@ -3,17 +3,14 @@
 import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LayoutDashboard, PlusCircle, Calendar, CheckSquare, BarChart3, Sparkles } from 'lucide-react';
+import { PlusCircle, CheckSquare, Sparkles } from 'lucide-react';
 
 const Sidebar = () => {
   const pathname = usePathname();
 
   const navItems = [
-    { name: 'Home', href: '/', icon: LayoutDashboard },
-    { name: 'Create', href: '/input', icon: PlusCircle },
-    { name: 'Calendar', href: '/calendar', icon: Calendar },
+    { name: 'Create', href: '/', icon: PlusCircle },
     { name: 'History', href: '/history', icon: CheckSquare },
-    { name: 'Analytics', href: '/analytics', icon: BarChart3 },
   ];
 
   return (

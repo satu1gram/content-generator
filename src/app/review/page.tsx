@@ -22,7 +22,7 @@ export default function ReviewPage() {
   useEffect(() => {
     const pending = sessionStorage.getItem('pending_content');
     if (!pending) {
-      router.push('/input');
+      router.push('/');
       return;
     }
     const { original_text, generated } = JSON.parse(pending);

@@ -55,7 +55,7 @@ const Select = ({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         className={`
-          w-full h-14 px-5 flex items-center justify-between
+          w-full h-11 md:h-12 px-5 flex items-center justify-between
           bg-white border border-[#E8E5DF] rounded-xl
           transition-all duration-300
           ${isOpen ? 'border-[#00A896] ring-4 ring-[#007A6E]/5 shadow-sm' : 'hover:border-[#00A896]/30'}
@@ -95,7 +95,7 @@ const Select = ({
                       setIsOpen(false);
                     }}
                     className={`
-                      w-full px-5 py-3.5 flex items-center justify-between
+                      w-full px-5 py-2 md:py-2.5 flex items-center justify-between
                       text-[12px] font-medium transition-all
                       ${isSelected 
                         ? 'bg-[#E0F5F2] text-[#00A896] font-bold' 

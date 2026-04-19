@@ -1,7 +1,5 @@
 'use client';
-export const runtime = 'edge';
-
-import React, { useState, useEffect, use } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Loader2, Sparkles, Send, Check } from 'lucide-react';
 import ImagePreview from '@/components/ImagePreview';
@@ -10,8 +8,19 @@ import CaptionBlock from '@/components/ui/CaptionBlock';
 import { ContentRecord, ClaudeOutput } from '@/lib/types';
 import Select from '@/components/ui/Select';
 
-export default function HistoryDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = use(params);
+export default function HistoryDetailPage({ params }: { params: any }) {
+  const [paramsId, setParamsId] = useState<string | null>(null);
+  
+  // Safe param unwrapping for Next.js 14/15 compatibility
+  useEffect(() => {
+    if (params instanceof Promise) {
+      params.then(p => setParamsId(p.id));
+    } else {
+      setParamsId(params.id);
+    }
+  }, [params]);
+
+  const id = paramsId;
   const [content, setContent] = useState<ContentRecord | null>(null);
   const [claudeData, setClaudeData] = useState<ClaudeOutput | null>(null);
   const [loading, setLoading] = useState(true);
@@ -20,6 +29,7 @@ export default function HistoryDetailPage({ params }: { params: Promise<{ id: st
 
   useEffect(() => {
     async function fetchDetail() {
+      if (!id) return;
       try {
         const res = await fetch(`/api/contents/${id}`);
         if (!res.ok) throw new Error('Failed to fetch detail');
@@ -78,7 +88,7 @@ export default function HistoryDetailPage({ params }: { params: Promise<{ id: st
     }
   };
 
-  if (loading) return (
+  if (loading || !id) return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4 text-[#9B8EA0]">
       <Loader2 className="w-8 h-8 animate-spin text-[#00A896]" />
       <p className="text-[13px] italic">Retrieving historical data...</p>
@@ -93,7 +103,7 @@ export default function HistoryDetailPage({ params }: { params: Promise<{ id: st
   );
 
   return (
-    <div className="space-y-10 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+    <div className="space-y-6 md:space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       {/* Editorial Top Bar (Archive) */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E8E5DF] pb-8">
         <div className="space-y-1">
@@ -104,7 +114,7 @@ export default function HistoryDetailPage({ params }: { params: Promise<{ id: st
             <ArrowLeft size={14} className="group-hover:-translate-x-1 transition-transform" /> Back to History
           </button>
           <h1 className="text-3xl md:text-4xl font-serif text-[#1C1C1E]">
-            Historical Archive <span className="text-[#9B8EA0] font-sans text-sm font-medium tracking-widest ml-3">Ref: {content.id.slice(-6).toUpperCase()}</span>
+            StoryFlow Archive <span className="text-[#9B8EA0] font-sans text-sm font-medium tracking-widest ml-3">Ref: {content.id.slice(-6).toUpperCase()}</span>
           </h1>
         </div>
         <div className="flex items-center gap-4">
@@ -130,7 +140,7 @@ export default function HistoryDetailPage({ params }: { params: Promise<{ id: st
         </div>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-12 gap-12">
+      <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 md:gap-10">
         {/* Main Content Area (2/3) */}
         <div className="xl:col-span-8 space-y-12">
           {/* Analysis */}
@@ -194,7 +204,7 @@ export default function HistoryDetailPage({ params }: { params: Promise<{ id: st
         </div>
 
         {/* Right Panel (1/3) */}
-        <div className="xl:col-span-4 space-y-10 self-start sticky top-20">
+        <div className="xl:col-span-4 space-y-6 md:space-y-8 self-start sticky top-20">
           <section className="space-y-6">
             <label className="text-[10px] font-bold text-[#9B8EA0] uppercase tracking-[0.2em] px-1">Design Distribution</label>
             <div className="bg-white border border-[#E8E5DF] rounded-xl p-6 shadow-sm">
@@ -204,7 +214,7 @@ export default function HistoryDetailPage({ params }: { params: Promise<{ id: st
 
           <section className="space-y-6">
             <label className="text-[10px] font-bold text-[#9B8EA0] uppercase tracking-[0.2em] px-1">Archive Metadata</label>
-            <div className="bg-white border border-[#E8E5DF] rounded-xl p-6 shadow-sm divide-y divide-[#EDEBE5]">
+            <div className="bg-white border border-[#E8E5DF] rounded-xl p-4 md:p-6 shadow-sm divide-y divide-[#EDEBE5]">
               <div className="flex items-center justify-between py-3">
                 <span className="text-[11px] font-bold text-[#9B8EA0] uppercase tracking-widest">Source</span>
                 <span className="text-[12px] font-bold text-[#00A896]">{content.source}</span>

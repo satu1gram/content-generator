@@ -15,6 +15,7 @@ export default function HistoryPage() {
   const [contents, setContents] = useState<ContentRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<ContentType | 'ALL'>('ALL');
+  const [statusFilter, setStatusFilter] = useState<'ALL' | 'draft' | 'approved' | 'posted'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -37,11 +38,12 @@ export default function HistoryPage() {
 
   const filteredContents = contents.filter(item => {
     const matchesType = filterType === 'ALL' || item.content_type === filterType;
+    const matchesStatus = statusFilter === 'ALL' || item.status === statusFilter;
     const rawText = item.raw_text || '';
     const captionFinal = item.caption_final || '';
     const matchesSearch = rawText.toLowerCase().includes(searchTerm.toLowerCase()) || 
                          captionFinal.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesType && matchesSearch;
+    return matchesType && matchesStatus && matchesSearch;
   });
 
   const typeLabels: Record<ContentType | 'ALL', string> = {
@@ -53,50 +55,62 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="space-y-12 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+    <div className="space-y-4 md:space-y-6 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-1000">
       {/* Editorial Header */}
-      <header className="flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-[#E8E5DF] pb-10">
-        <div className="space-y-3">
-          <Link href="/" className="flex items-center gap-2 text-[10px] font-bold text-[#9B8EA0] uppercase tracking-[0.2em] hover:text-[#00A896] transition-colors mb-3">
-            <ArrowLeft size={12} /> Back to Create
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#E8E5DF] pb-4">
+        <div className="space-y-1">
+          <Link href="/" className="flex items-center gap-2 text-[9px] font-bold text-[#9B8EA0] uppercase tracking-[0.2em] hover:text-[#00A896] transition-colors mb-1 bg-white/50 w-fit px-2 py-0.5 rounded-full border border-[#E8E5DF]">
+            <ArrowLeft size={10} /> Back
           </Link>
-          <h1 className="text-4xl md:text-5xl font-serif text-[#1C1C1E] leading-tight max-w-2xl">
-            Historical <span className="text-[#00A896] italic">Archives</span>.
+          <h1 className="text-xl md:text-2xl font-serif text-[#1C1C1E] leading-tight max-w-2xl">
+            Historical <span className="text-[#00A896] italic">Archives</span>
           </h1>
-          <p className="text-[14px] text-[#9B8EA0] max-w-md">
-            A complete record of all editorial pieces generated for British Propolis.
-          </p>
         </div>
         
-        <div className="flex items-center gap-2 p-1.5 bg-[#F7F6F2] border border-[#E8E5DF] rounded-full">
-           <div className="px-4 py-1.5 bg-white shadow-sm rounded-full text-[11px] font-bold text-[#00A896]">
-             {contents.length} Total Records
+        <div className="flex items-center gap-2 p-1 bg-[#F7F6F2] border border-[#E8E5DF] rounded-full">
+           <div className="px-3 py-1 bg-white shadow-sm rounded-full text-[10px] font-bold text-[#00A896]">
+             {contents.length} Total
            </div>
         </div>
       </header>
 
       {/* Control Bar: Search & Filter */}
-      <div className="flex flex-col lg:flex-row items-center gap-6">
+      <div className="flex flex-col md:flex-row items-center gap-2 md:gap-3">
         <div className="relative flex-1 group w-full">
-          <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#9B8EA0] group-focus-within:text-[#00A896] transition-colors">
-            <Search size={18} />
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#9B8EA0] group-focus-within:text-[#00A896] transition-colors">
+            <Search size={16} />
           </div>
           <input 
             type="text" 
-            placeholder="Search by keywords or captions..." 
-            className="w-full h-14 pl-14 pr-6 bg-white border border-[#E8E5DF] rounded-xl text-[14px] font-sans text-[#1C1C1E] focus:outline-none focus:border-[#00A896] focus:ring-4 focus:ring-[#007A6E]/5 transition-all shadow-sm"
+            placeholder="Search captions..." 
+            className="w-full h-11 pl-11 pr-4 bg-white border border-[#E8E5DF] rounded-xl text-[13px] font-sans text-[#1C1C1E] focus:outline-none focus:border-[#00A896] focus:ring-4 focus:ring-[#007A6E]/5 transition-all shadow-sm"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
         
-        <div className="w-full lg:w-80">
+        <div className="w-full md:w-56 shrink-0">
           <Select 
             options={Object.entries(typeLabels).map(([value, label]) => ({ value, label }))}
             value={filterType}
             onChange={(val) => setFilterType(val as any)}
-            icon={<Filter size={16} />}
-            placeholder="All Editions"
+            icon={<Filter size={14} />}
+            placeholder="Type"
+          />
+        </div>
+
+        <div className="w-full md:w-48 shrink-0">
+          <Select 
+            options={[
+              { value: 'ALL', label: 'All Status' },
+              { value: 'draft', label: 'Draft' },
+              { value: 'approved', label: 'Approved' },
+              { value: 'posted', label: 'Posted' },
+            ]}
+            value={statusFilter}
+            onChange={(val) => setStatusFilter(val as any)}
+            icon={<Sparkles size={14} />}
+            placeholder="Status"
           />
         </div>
       </div>
@@ -108,34 +122,19 @@ export default function HistoryPage() {
           <p className="text-[14px] text-[#9B8EA0] italic font-serif">Curating archive records...</p>
         </div>
       ) : filteredContents.length > 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-8">
           <AnimatePresence mode="popLayout">
             {filteredContents.map((content) => (
-              <motion.div 
-                key={content.id}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                layout
-                className="group cursor-pointer"
-                onClick={() => router.push(`/history/${content.id}`)}
-              >
-                <div className="bg-white border border-[#E8E5DF] rounded-xl overflow-hidden shadow-sm group-hover:shadow-lg group-hover:border-[#00A896]/30 transition-all transform group-hover:-translate-y-1 duration-300 relative">
-                  <div className="absolute top-3 right-3 z-10">
-                    <div className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                      content.status === 'approved' ? 'bg-[#E0F5F2] text-[#00A896]' : 'bg-[#FFF8E7] text-amber-700'
-                    }`}>
-                      {content.status}
-                    </div>
-                  </div>
+                <motion.div 
+                  key={content.id}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  layout
+                  onClick={() => router.push(`/history/${content.id}`)}
+                >
                   <ContentCard content={content} />
-                  <div className="px-5 pb-5 pt-0">
-                    <div className="flex items-center gap-2 text-[10px] text-[#9B8EA0] font-mono">
-                      <Clock size={10} /> {new Date(content.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
+                </motion.div>
             ))}
           </AnimatePresence>
         </div>
@@ -150,7 +149,7 @@ export default function HistoryPage() {
                 : "Your creative history is waiting for its first entry."}
             </p>
           </div>
-          <Link href="/input" className="inline-block px-8 py-3 bg-[#00A896] text-white rounded-full text-[12px] font-bold shadow-md hover:bg-[#008A7B]">
+          <Link href="/" className="inline-block px-8 py-3 bg-[#00A896] text-white rounded-full text-[12px] font-bold shadow-md hover:bg-[#008A7B]">
             Create First Edition
           </Link>
         </div>

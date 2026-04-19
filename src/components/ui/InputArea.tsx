@@ -127,22 +127,26 @@ const InputArea = ({
 
         <div className="flex flex-col items-center sm:items-end gap-2 w-full sm:w-auto">
           {!isTypeSelected && value.trim() && (
-            <span className="text-[10px] font-bold text-[#FF4D4D] animate-pulse">
-              Please select a story type below
-            </span>
+            <div className="flex items-center gap-2 px-3 py-1 bg-amber-50 border border-amber-100 rounded-full animate-bounce">
+              <Sparkles size={10} className="text-amber-500" />
+              <span className="text-[9px] font-black text-amber-600 uppercase tracking-widest">
+                Almost there! Select a type above
+              </span>
+            </div>
           )}
           <button
             onClick={onSend}
             disabled={disabled || isOptimizing || !value.trim() || !isTypeSelected}
             className={`
               w-full sm:w-auto
-              h-[40px] px-8 flex items-center justify-center gap-2
-              ${!isTypeSelected && value.trim() ? 'bg-[#9B8EA0] opacity-50 cursor-not-allowed' : 'bg-[#00A896] hover:bg-[#008A7B] shadow-md hover:shadow-lg'}
-              text-white 
-              rounded-full font-bold text-[12px]
+              h-[44px] px-10 flex items-center justify-center gap-3
+              ${!isTypeSelected || !value.trim() 
+                ? 'bg-[#E8E5DF] text-[#9B8EA0] cursor-not-allowed shadow-none' 
+                : 'bg-[#00A896] hover:bg-[#008A7B] text-white shadow-lg hover:shadow-xl active:scale-[0.98]'
+              }
+              rounded-full font-black text-[12px] uppercase tracking-[0.1em]
               transition-all duration-300
-              active:scale-[0.95]
-              disabled:opacity-20 disabled:pointer-events-none
+              disabled:opacity-40
             `.trim()}
           >
             Generate Story <Send size={14} />

@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { PlusCircle, CheckSquare, Sparkles } from 'lucide-react';
+import StoryFlowLogo from './ui/StoryFlowLogo';
 
 const Sidebar = () => {
   const pathname = usePathname();
@@ -17,8 +18,8 @@ const Sidebar = () => {
     <>
       {/* Editorial Desktop Sidebar */}
       <aside className="fixed left-0 top-0 bottom-0 w-[56px] bg-white border-r border-[#E8E5DF] hidden md:flex flex-col items-center py-6 z-50">
-        <Link href="/" className="w-8 h-8 bg-[#1C1C1E] rounded-lg flex items-center justify-center mb-10 shrink-0 shadow-sm hover:scale-105 transition-transform">
-          <Sparkles size={16} className="text-[#00A896]" fill="currentColor" />
+        <Link href="/" className="mb-10 shrink-0 hover:scale-110 transition-transform">
+          <StoryFlowLogo size={32} />
         </Link>
 
         <nav className="flex flex-col gap-4 w-full px-2">
@@ -49,7 +50,7 @@ const Sidebar = () => {
         <div className="flex-1" />
 
         <div className="w-8 h-8 rounded-full bg-[#E0F5F2] border border-[#EDEBE5] flex items-center justify-center text-[10px] font-black text-[#00A896] shrink-0">
-          BP
+          SF
         </div>
       </aside>
 

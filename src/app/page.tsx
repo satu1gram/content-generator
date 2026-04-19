@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, AlertCircle, Sparkles, MessageCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Loader2, AlertCircle, Sparkles, MessageCircle, ChevronDown } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import AIOrb from '@/components/ui/AIOrb';
 import InputArea from '@/components/ui/InputArea';
 
@@ -40,7 +40,7 @@ export default function RootCreatePage() {
   };
 
   const handleGenerate = async () => {
-    if (!inputText.trim() || isLoading) return;
+    if (!inputText.trim() || isLoading || !selectedType) return;
     setIsLoading(true);
     setError('');
     try {
@@ -66,9 +66,9 @@ export default function RootCreatePage() {
   };
 
   return (
-    <div className="max-w-3xl mx-auto py-8 md:py-16 space-y-12 animate-in fade-in slide-in-from-bottom-6 duration-1000">
+    <div className="max-w-4xl mx-auto py-2 md:py-8 space-y-6 md:space-y-8 animate-in fade-in duration-1000">
       {/* Editorial Header Section */}
-      <div className="text-center space-y-6">
+      <div className="text-center space-y-3 md:space-y-4 mb-2 md:mb-6">
         <div className="flex justify-center">
            <AIOrb />
         </div>
@@ -80,97 +80,127 @@ export default function RootCreatePage() {
             Bring your stories <span className="text-[#00A896] italic">to life</span>.
           </h1>
           <p className="text-[14px] md:text-[15px] text-[#9B8EA0] max-w-lg mx-auto leading-relaxed px-4">
-            Paste your Telegram testimonials or raw data below. Our AI editorial team will refine it into high-impact social media content.
+            Curate high-impact social media content by following our two-step editorial process.
           </p>
         </div>
       </div>
 
-      {/* Input Section */}
-      <div className="space-y-8">
-        <motion.div 
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-        >
-          <InputArea 
-            value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
-            onSend={handleGenerate}
-            onOptimize={handleOptimize}
-            onTemplateSelect={handleTemplateSelect}
-            isOptimizing={isOptimizing}
-            disabled={isLoading}
-            isTypeSelected={!!selectedType}
-            placeholder="Paste your source text here (e.g. Testimonials, Daily Reports...)"
-          />
-        </motion.div>
+      {/* STEP 1: CONTENT STRATEGY */}
+      <div className="space-y-6">
+        <div className="flex items-center gap-4 px-2">
+           <div className="w-8 h-8 rounded-full bg-[#00A896] text-white flex items-center justify-center text-[12px] font-black shadow-md">1</div>
+           <div>
+              <h2 className="text-[14px] font-black text-[#1C1C1E] uppercase tracking-widest">Choose Your Strategy</h2>
+              <p className="text-[12px] text-[#9B8EA0]">What kind of story are we telling today?</p>
+           </div>
+        </div>
 
-        {isLoading && (
-          <div className="flex flex-col items-center gap-4 py-6 animate-in fade-in duration-500">
-            <Loader2 className="w-8 h-8 animate-spin text-[#00A896]" />
-            <p className="text-[12px] font-bold text-[#00A896] uppercase tracking-[0.2em] italic">
-              AI Editorial Assistant is Curating...
-            </p>
-          </div>
-        )}
-
-        {error && (
-          <div className="flex items-center gap-3 p-5 bg-[#FEF2F2] border border-rose-100 rounded-2xl text-rose-600 text-[13px] font-medium shadow-sm">
-            <AlertCircle size={18} /> {error}
-          </div>
-        )}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {[
-          { id: "A", title: "Testimonial", desc: "Patient healing stories and recovery reports.", icon: <Sparkles size={14} /> },
-          { id: "C", title: "Opportunity", desc: "Business partnership and income results.", icon: <MessageCircle size={14} /> },
-          { id: "B", title: "Education", desc: "Product benefits and healthy lifestyle guides.", icon: <Sparkles size={14} /> },
-        ].map((item, idx) => {
-          const isSelected = selectedType === item.id;
-          return (
-            <motion.div
-              key={item.title}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 + (idx * 0.1) }}
-              onClick={() => setSelectedType(item.id)}
-              className="cursor-pointer"
-            >
-              <div className={`
-                h-full bg-white border rounded-2xl p-6 shadow-sm transition-all duration-300
-                ${isSelected 
-                  ? 'border-[#00A896] ring-4 ring-[#007A6E]/5 bg-[#E0F5F2]/10 scale-[1.02]' 
-                  : 'border-[#E8E5DF] hover:border-[#00A896]/30 hover:shadow-md'
-                }
-                group relative
-              `.trim()}>
+        <div className="grid grid-cols-3 gap-3 md:gap-6">
+          {[
+            { id: "A", title: "Testimonial", desc: "Patient healing stories and recovery reports.", icon: <Sparkles size={14} /> },
+            { id: "C", title: "Opportunity", desc: "Business partnership and income results.", icon: <MessageCircle size={14} /> },
+            { id: "B", title: "Education", desc: "Product benefits and healthy lifestyle guides.", icon: <Sparkles size={14} /> },
+          ].map((item, idx) => {
+            const isSelected = selectedType === item.id;
+            return (
+              <motion.div
+                key={item.title}
+                whileHover={{ y: -4 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setSelectedType(item.id)}
+                className="cursor-pointer"
+              >
                 <div className={`
-                  w-8 h-8 rounded-lg flex items-center justify-center transition-all mb-4
-                  ${isSelected ? 'bg-[#00A896] text-white shadow-md' : 'bg-[#F7F6F2] text-[#9B8EA0] group-hover:bg-[#E0F5F2] group-hover:text-[#00A896]'}
+                h-full bg-white border rounded-2xl p-3 md:p-5 shadow-sm transition-all duration-300
+                  ${isSelected 
+                    ? 'border-[#00A896] ring-4 ring-[#007A6E]/5 bg-[#E0F5F2]/10' 
+                    : 'border-[#E8E5DF] hover:border-[#00A896]/30 hover:shadow-md'
+                  }
+                  group relative flex flex-col items-center md:items-start text-center md:text-left
                 `.trim()}>
-                  {item.icon}
-                </div>
-                <h3 className={`text-[12px] font-black uppercase tracking-widest mb-2 flex items-center gap-2 transition-colors ${isSelected ? 'text-[#00A896]' : 'text-[#1C1C1E]'}`}>
-                  {item.title}
-                </h3>
-                <p className="text-[13px] text-[#9B8EA0] leading-relaxed">{item.desc}</p>
-                {isSelected && (
-                  <div className="absolute top-4 right-4 text-[#00A896]">
-                     <Sparkles size={12} fill="currentColor" />
+                  <div className={`
+                    w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center transition-all mb-2 md:mb-4
+                    ${isSelected ? 'bg-[#00A896] text-white shadow-md' : 'bg-[#F7F6F2] text-[#9B8EA0] group-hover:bg-[#E0F5F2] group-hover:text-[#00A896]'}
+                  `.trim()}>
+                    {item.icon}
                   </div>
-                )}
-              </div>
-            </motion.div>
-          );
-        })}
+                  <h3 className={`text-[10px] md:text-[12px] font-black uppercase tracking-widest mb-1 md:mb-2 flex items-center gap-2 transition-colors ${isSelected ? 'text-[#00A896]' : 'text-[#1C1C1E]'}`}>
+                    {item.title}
+                  </h3>
+                  <p className="text-[13px] text-[#9B8EA0] leading-relaxed hidden md:block">{item.desc}</p>
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 md:top-4 md:right-4 text-[#00A896]">
+                       <Sparkles size={10} fill="currentColor" className="md:w-3 md:h-3" />
+                    </div>
+                  )}
+                </div>
+              </motion.div>
+            );
+          })}
+        </div>
       </div>
+
+      {/* STEP 2: CONTENT INPUT */}
+      <AnimatePresence>
+        {selectedType && (
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 20 }}
+            className="space-y-6 pt-4"
+          >
+            <div className="flex items-center gap-4 px-2">
+               <div className="w-8 h-8 rounded-full bg-[#00A896] text-white flex items-center justify-center text-[12px] font-black shadow-md">2</div>
+               <div>
+                  <h2 className="text-[14px] font-black text-[#1C1C1E] uppercase tracking-widest">Provide Source Data</h2>
+                  <p className="text-[12px] text-[#9B8EA0]">Paste your raw testimonials or context here.</p>
+               </div>
+            </div>
+
+            <div className="space-y-8">
+              <InputArea 
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onSend={handleGenerate}
+                onOptimize={handleOptimize}
+                onTemplateSelect={handleTemplateSelect}
+                isOptimizing={isOptimizing}
+                disabled={isLoading}
+                isTypeSelected={!!selectedType}
+                placeholder="Paste your source text here (e.g. Testimonials, Daily Reports...)"
+              />
+
+              {isLoading && (
+                <div className="flex flex-col items-center gap-4 py-6">
+                  <Loader2 className="w-8 h-8 animate-spin text-[#00A896]" />
+                  <p className="text-[12px] font-bold text-[#00A896] uppercase tracking-[0.2em] italic">
+                    AI Editorial Assistant is Curating...
+                  </p>
+                </div>
+              )}
+
+              {error && (
+                <div className="flex items-center gap-3 p-5 bg-[#FEF2F2] border border-rose-100 rounded-2xl text-rose-600 text-[13px] font-medium shadow-sm">
+                  <AlertCircle size={18} /> {error}
+                </div>
+              )}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {!selectedType && (
+         <div className="text-center py-10 opacity-30">
+            <ChevronDown className="w-6 h-6 mx-auto animate-bounce text-[#9B8EA0]" />
+            <p className="text-[11px] font-bold uppercase tracking-widest mt-2">Select a strategy to unlock Step 2</p>
+         </div>
+      )}
 
       {/* Footer Branding */}
       <div className="text-center pt-8 border-t border-[#F7F6F2]">
         <p className="text-[10px] text-[#CED4DA] font-bold uppercase tracking-[0.3em] flex items-center justify-center gap-4">
           <span className="w-4 h-px bg-[#CED4DA]/30" />
-          Editorial Powered by Gemini 2.0
+          StoryFlow | Powered by Gemini 2.0
           <span className="w-4 h-px bg-[#CED4DA]/30" />
         </p>
       </div>

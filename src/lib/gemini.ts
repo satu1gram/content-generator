@@ -1,7 +1,13 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import productsData from './bp-knowledge.json';
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+let _genAI: GoogleGenerativeAI | null = null;
+function getGenAI(): GoogleGenerativeAI {
+  if (_genAI) return _genAI;
+  const key = process.env.GEMINI_API_KEY || '';
+  _genAI = new GoogleGenerativeAI(key);
+  return _genAI;
+}
 
 export const MODELS = [
   "gemini-1.5-flash",
@@ -88,9 +94,10 @@ PANDUAN WARNA BRAND (DETIL):
 export async function generateWithFallback(prompt: string, retryCount = 0): Promise<any> {
   let lastError: any = null;
   
+  const genAI = getGenAI();
   for (const modelName of MODELS) {
     try {
-      const model = genAI.getGenerativeModel({ 
+      const model = genAI.getGenerativeModel({
         model: modelName,
         systemInstruction: SYSTEM_PROMPT,
       });
@@ -133,4 +140,4 @@ export async function generateWithFallback(prompt: string, retryCount = 0): Prom
   throw lastError;
 }
 
-export default genAI;
+export default getGenAI;

@@ -1,10 +1,10 @@
 export const runtime = 'edge';
 import { NextResponse } from 'next/server';
-import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAny } from '@/lib/supabase';
 
 export async function GET() {
   try {
-    const client = supabaseAdmin || supabase;
+    const client = getSupabaseAny();
     if (!client) {
       return NextResponse.json(
         { 
@@ -46,7 +46,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const client = supabaseAdmin || supabase;
+    const client = getSupabaseAny();
     if (!client) {
       return NextResponse.json(
         { 
@@ -107,7 +107,7 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   try {
-    const client = supabaseAdmin || supabase;
+    const client = getSupabaseAny();
     if (!client) {
       return NextResponse.json(
         { 

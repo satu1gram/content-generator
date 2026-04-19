@@ -1,13 +1,13 @@
 export const runtime = 'edge';
 import { NextResponse } from 'next/server';
-import { supabase, supabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAny } from '@/lib/supabase';
 
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const client = supabaseAdmin || supabase;
+    const client = getSupabaseAny();
     if (!client) return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
     
     const { id } = await params;

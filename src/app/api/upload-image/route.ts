@@ -1,10 +1,11 @@
 export const runtime = 'edge';
 import { NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { getSupabaseAny } from '@/lib/supabase';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(req: Request) {
   try {
+    const supabase = getSupabaseAny();
     if (!supabase) return NextResponse.json({ error: 'Supabase not configured' }, { status: 500 });
     const formData = await req.formData();
     const file = formData.get('file') as File;

@@ -1,6 +1,6 @@
 export const runtime = 'edge';
 import { NextResponse } from 'next/server';
-import genAI, { SYSTEM_PROMPT, MODELS, generateWithFallback } from '@/lib/gemini';
+import { SYSTEM_PROMPT, generateWithFallback } from '@/lib/gemini';
 import { generateWithGroq } from '@/lib/groq';
 import { generateCarouselImages, splitTextToSlides } from '@/lib/carousel-engine';
 

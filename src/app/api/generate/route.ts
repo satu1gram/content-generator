@@ -1,8 +1,8 @@
 export const runtime = 'edge';
 import { NextResponse } from 'next/server';
-import genAI, { SYSTEM_PROMPT, MODELS, generateWithFallback } from '@/lib/gemini';
+import { SYSTEM_PROMPT, generateWithFallback } from '@/lib/gemini';
 import { generateWithGroq } from '@/lib/groq';
-import { generateCarouselImages, splitTextToSlides } from '@/lib/carousel-engine';
+import { generateCarouselImages, splitTextToSlides, CarouselBrandingSettings } from '@/lib/carousel-engine';
 
 export async function POST(req: Request) {
   try {
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
     }
 
-    const { prompt } = body;
+    const { prompt, brandingSettings } = body;
     if (!prompt) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 });
     }
@@ -103,7 +103,8 @@ export async function POST(req: Request) {
         carousel_slides: (parsedData.carousel_slides || []).map((s: any, idx: number) => ({
           title: s.title || `Slide ${idx + 1}`,
           body: s.body || '',
-          image_search_query: s.image_search_query || 'nature minimalist'
+          image_search_query: s.image_search_query || 'nature minimalist',
+          ...(s.design ? { design: s.design } : {}),
         })),
         caption_v1: parsedData.caption_v1 || '',
         caption_v2: parsedData.caption_v2 || '',
@@ -133,8 +134,9 @@ export async function POST(req: Request) {
       try {
         console.log('🎨 Stage Images: Starting Visual Generation...');
         const result = await generateCarouselImages(
-          normalizedData.carousel_slides, 
-          normalizedData.visual_theme
+          normalizedData.carousel_slides,
+          normalizedData.visual_theme,
+          brandingSettings as CarouselBrandingSettings | undefined
         );
         if (Array.isArray(result)) {
           imageUrls = result;

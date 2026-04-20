@@ -1,6 +1,6 @@
 export const runtime = 'edge';
 import { NextResponse } from 'next/server';
-import genAI, { GEMINI_MODEL } from '@/lib/gemini';
+import getGenAI, { GEMINI_MODEL } from '@/lib/gemini';
 
 const OPTIMIZE_PROMPT = `
 Kamu adalah Prompt Engineer ahli khusus untuk konten British Propolis (BP).
@@ -28,7 +28,7 @@ export async function POST(req: Request) {
     const { prompt } = await req.json();
     if (!prompt) return NextResponse.json({ error: 'No prompt' }, { status: 400 });
 
-    const model = genAI.getGenerativeModel({ 
+    const model = getGenAI().getGenerativeModel({
       model: GEMINI_MODEL,
       systemInstruction: OPTIMIZE_PROMPT,
     });

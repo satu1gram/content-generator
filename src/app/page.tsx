@@ -1,11 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Loader2, AlertCircle, Sparkles, MessageCircle, ChevronDown } from 'lucide-react';
+import { Loader2, AlertCircle, Sparkles, MessageCircle, ChevronDown, Settings2, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import AIOrb from '@/components/ui/AIOrb';
 import InputArea from '@/components/ui/InputArea';
+import type { CarouselBrandingSettings, HandlePosition, CounterFormat, CounterPosition } from '@/lib/carousel-engine';
+
+const STORAGE_KEY = 'carousel_branding_settings';
+
+const DEFAULT_BRANDING: CarouselBrandingSettings = {
+  handle: '@username',
+  handlePosition: 'top-right',
+  counterFormat: 'numeric',
+  counterPosition: 'bottom-right',
+};
 
 export default function RootCreatePage() {
   const [inputText, setInputText] = useState('');
@@ -13,6 +23,23 @@ export default function RootCreatePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [error, setError] = useState('');
+  const [brandingOpen, setBrandingOpen] = useState(false);
+  const [branding, setBranding] = useState<CarouselBrandingSettings>(DEFAULT_BRANDING);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY);
+      if (stored) setBranding(JSON.parse(stored));
+    } catch {}
+  }, []);
+
+  const updateBranding = (patch: Partial<CarouselBrandingSettings>) => {
+    setBranding(prev => {
+      const next = { ...prev, ...patch };
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch {}
+      return next;
+    });
+  };
   const router = useRouter();
 
   const handleOptimize = async () => {
@@ -47,9 +74,10 @@ export default function RootCreatePage() {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           prompt: inputText,
-          contentType: selectedType 
+          contentType: selectedType,
+          brandingSettings: branding,
         }),
       });
       if (!res.ok) throw new Error('Failed to generate content');
@@ -195,6 +223,134 @@ export default function RootCreatePage() {
             <p className="text-[11px] font-bold uppercase tracking-widest mt-2">Select a strategy to unlock Step 2</p>
          </div>
       )}
+
+      {/* Slide Branding Settings */}
+      <div className="border border-[#E8E5DF] rounded-2xl overflow-hidden bg-white shadow-sm">
+        <button
+          onClick={() => setBrandingOpen(o => !o)}
+          className="w-full flex items-center justify-between px-6 py-4 hover:bg-[#F7F6F2] transition-colors"
+        >
+          <div className="flex items-center gap-3">
+            <Settings2 size={15} className="text-[#9B8EA0]" />
+            <span className="text-[12px] font-black uppercase tracking-widest text-[#1C1C1E]">Slide Branding</span>
+            <span className="text-[11px] text-[#9B8EA0] font-medium">— username &amp; nomor slide</span>
+          </div>
+          {brandingOpen ? <ChevronUp size={15} className="text-[#9B8EA0]" /> : <ChevronDown size={15} className="text-[#9B8EA0]" />}
+        </button>
+
+        <AnimatePresence>
+          {brandingOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="px-6 pb-6 pt-2 space-y-6 border-t border-[#F0EEE8]">
+
+                {/* Handle */}
+                <div className="space-y-3">
+                  <label className="text-[11px] font-bold text-[#9B8EA0] uppercase tracking-[0.2em]">Username / Handle</label>
+                  <div className="flex gap-3 flex-wrap">
+                    <input
+                      type="text"
+                      value={branding.handle}
+                      onChange={e => updateBranding({ handle: e.target.value })}
+                      placeholder="@username"
+                      className="flex-1 min-w-[160px] px-4 py-2.5 text-[13px] border border-[#E8E5DF] rounded-xl focus:outline-none focus:border-[#00A896] transition-colors"
+                    />
+                    <div className="flex gap-2 flex-wrap">
+                      {(['top-left', 'top-right', 'bottom-left', 'bottom-right', 'none'] as HandlePosition[]).map(pos => (
+                        <button
+                          key={pos}
+                          onClick={() => updateBranding({ handlePosition: pos })}
+                          className={`px-3 py-2 text-[11px] font-bold rounded-lg border transition-all ${
+                            branding.handlePosition === pos
+                              ? 'bg-[#00A896] text-white border-[#00A896]'
+                              : 'border-[#E8E5DF] text-[#9B8EA0] hover:border-[#00A896]/40'
+                          }`}
+                        >
+                          {pos === 'none' ? 'Sembunyikan' : pos.replace('-', ' ')}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Counter */}
+                <div className="space-y-3">
+                  <label className="text-[11px] font-bold text-[#9B8EA0] uppercase tracking-[0.2em]">Nomor Slide</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {([
+                      { val: 'numeric', label: '01 / 06' },
+                      { val: 'written', label: '1 of 6' },
+                      { val: 'dots',    label: '● ● ○ ○' },
+                      { val: 'none',    label: 'Sembunyikan' },
+                    ] as { val: CounterFormat; label: string }[]).map(({ val, label }) => (
+                      <button
+                        key={val}
+                        onClick={() => updateBranding({ counterFormat: val })}
+                        className={`px-3 py-2 text-[11px] font-bold rounded-lg border transition-all ${
+                          branding.counterFormat === val
+                            ? 'bg-[#00A896] text-white border-[#00A896]'
+                            : 'border-[#E8E5DF] text-[#9B8EA0] hover:border-[#00A896]/40'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                  {branding.counterFormat !== 'none' && (
+                    <div className="flex gap-2 flex-wrap">
+                      {(['top-left', 'top-right', 'bottom-left', 'bottom-right'] as CounterPosition[]).map(pos => (
+                        <button
+                          key={pos}
+                          onClick={() => updateBranding({ counterPosition: pos })}
+                          className={`px-3 py-2 text-[11px] font-bold rounded-lg border transition-all ${
+                            branding.counterPosition === pos
+                              ? 'bg-[#1C1C1E] text-white border-[#1C1C1E]'
+                              : 'border-[#E8E5DF] text-[#9B8EA0] hover:border-[#1C1C1E]/30'
+                          }`}
+                        >
+                          {pos.replace('-', ' ')}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                {/* Live Preview */}
+                <div className="bg-[#0A0F0D] rounded-xl p-5 relative" style={{ height: 120 }}>
+                  <span className="text-[10px] text-[#9B8EA0] uppercase tracking-widest absolute top-4 left-5">Preview</span>
+                  {/* Handle preview */}
+                  {branding.handlePosition !== 'none' && branding.handle && (
+                    <span className={`absolute text-[10px] font-bold text-white/50 uppercase tracking-wider ${
+                      branding.handlePosition === 'top-left' ? 'top-4 left-16' :
+                      branding.handlePosition === 'top-right' ? 'top-4 right-5' :
+                      branding.handlePosition === 'bottom-left' ? 'bottom-4 left-5' :
+                      'bottom-4 right-5'
+                    }`}>{branding.handle}</span>
+                  )}
+                  {/* Counter preview */}
+                  {branding.counterFormat !== 'none' && (
+                    <span className={`absolute text-[10px] text-white/35 tracking-widest ${
+                      branding.counterPosition === 'top-left' ? 'top-4 left-5' :
+                      branding.counterPosition === 'top-right' ? 'top-4 right-5' :
+                      branding.counterPosition === 'bottom-left' ? 'bottom-4 left-5' :
+                      'bottom-4 right-5'
+                    }`}>
+                      {branding.counterFormat === 'numeric' ? '01 / 06' :
+                       branding.counterFormat === 'written' ? '1 of 6' : '● ● ○ ○ ○ ○'}
+                    </span>
+                  )}
+                </div>
+
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
 
       {/* Footer Branding */}
       <div className="text-center pt-8 border-t border-[#F7F6F2]">

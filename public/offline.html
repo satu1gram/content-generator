@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StoryFlow — Offline</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: #F7F6F2;
+      color: #1C1C1E;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      text-align: center;
+    }
+    .logo {
+      width: 64px; height: 64px;
+      border-radius: 16px;
+      margin-bottom: 32px;
+      opacity: 0.85;
+    }
+    .badge {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: #00A896;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(32px, 7vw, 56px);
+      font-weight: 700;
+      line-height: 1.1;
+      margin-bottom: 20px;
+    }
+    h1 em { color: #00A896; font-style: italic; }
+    p {
+      font-size: 16px;
+      color: #9B8EA0;
+      max-width: 380px;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #00A896;
+      color: #fff;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 14px 32px;
+      border-radius: 999px;
+      border: none;
+      cursor: pointer;
+      text-decoration: none;
+      transition: background 0.2s;
+    }
+    .btn:hover { background: #008A7B; }
+    .divider {
+      width: 40px; height: 2px;
+      background: #00A896;
+      opacity: 0.3;
+      margin: 48px auto 24px;
+    }
+    .hint {
+      font-size: 12px;
+      color: #CED4DA;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+    }
+  </style>
+</head>
+<body>
+  <img src="/icons/icon-192.png" alt="StoryFlow" class="logo">
+  <div class="badge">StoryFlow Studio</div>
+  <h1>Koneksi <em>Terputus</em>.</h1>
+  <p>Kamu sedang offline. Sambungkan kembali ke internet untuk melanjutkan membuat konten.</p>
+  <a href="/" class="btn">Coba Lagi</a>
+  <div class="divider"></div>
+  <div class="hint">Powered by Gemini · StoryFlow Engine</div>
+  <script>
+    window.addEventListener('online', () => { window.location.href = '/'; });
+  </script>
+</body>
+</html>

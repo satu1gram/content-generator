@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
 import { ContentRecord, ContentType } from '@/lib/types';
 import ContentCard from '@/components/ContentCard';
 import { Sparkles, ArrowLeft, Search, Filter, ChevronDown, Loader2, Clock } from 'lucide-react';

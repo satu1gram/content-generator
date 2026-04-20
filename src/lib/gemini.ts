@@ -41,6 +41,46 @@ SKILL: SOCIAL CONTENT WRITING
 - Hasilkan 1 draf IG Carousel (6-10 slide) dalam bentuk array of objects.
 - Hasilkan 2 draf Caption Instagram (Storytelling & Edukasi).
 
+SKILL: VISUAL DESIGN VARIETY (WAJIB)
+
+Setiap slide di carousel_slides HARUS punya field design dengan struktur:
+{
+  "title": "...",
+  "body": "...",
+  "image_search_query": "hijab woman happy",
+  "design": {
+    "layout": "HERO_TYPOGRAPHIC | SPLIT_IMAGE_TEXT | FULL_BLEED_IMAGE | MINIMAL_QUOTE | MAGAZINE_EDITORIAL | STAT_HIGHLIGHT",
+    "mood": "PREMIUM_DARK | LIGHT_AIRY | ACCENT_DOMINANT",
+    "emphasis_word": "kata paling penting dari title untuk di-highlight",
+    "decoration": "optional tagline/label kecil, misal 'TIPS #1' atau 'FAKTA'",
+    "stat_value": "optional, hanya untuk STAT_HIGHLIGHT, misal '87%' atau '3 dari 5'"
+  }
+}
+
+ATURAN LAYOUT DISTRIBUTION (WAJIB PATUH):
+- Slide 1 (cover): HERO_TYPOGRAPHIC atau FULL_BLEED_IMAGE (stop scroll!)
+- Slide 2-3 (context/problem): SPLIT_IMAGE_TEXT atau MAGAZINE_EDITORIAL
+- Slide 4-5 (solution/tips): MINIMAL_QUOTE atau STAT_HIGHLIGHT
+- Slide terakhir (CTA): MINIMAL_QUOTE atau ACCENT_DOMINANT mood
+
+VARIASI WAJIB:
+- Dalam 1 carousel, MINIMUM 3 layout berbeda
+- MAXIMUM 2 slide berturut-turut pakai layout sama
+- Mood boleh konsisten atau bervariasi sesuai emotional arc
+
+MOOD MAPPING (Panduan):
+- Cover & hook → PREMIUM_DARK (dramatic) atau ACCENT_DOMINANT
+- Edukasi tenang → LIGHT_AIRY
+- Testimonial emotional → PREMIUM_DARK
+- Statistik/fakta → ACCENT_DOMINANT
+- CTA akhir → PREMIUM_DARK atau ACCENT_DOMINANT
+
+BIAS LAYOUT SESUAI TIPE KONTEN:
+- Mitra/Peluang: prioritaskan STAT_HIGHLIGHT + HERO_TYPOGRAPHIC
+- Edukasi: prioritaskan MAGAZINE_EDITORIAL + SPLIT_IMAGE_TEXT
+- Testimoni: prioritaskan FULL_BLEED_IMAGE + SPLIT_IMAGE_TEXT
+- Produk: prioritaskan HERO_TYPOGRAPHIC + MINIMAL_QUOTE
+
 DATA PRODUK (REFERENSI WAJIB):
 ${JSON.stringify(productsData, null, 2)}
 
@@ -56,10 +96,17 @@ FORMAT OUTPUT WAJIB JSON:
     { "title": "...", "script": "..." }
   ],
   "carousel_slides": [
-    { 
-      "title": "...", 
-      "body": "...", 
-      "image_search_query": "hijab woman healthy lifestyle" 
+    {
+      "title": "...",
+      "body": "...",
+      "image_search_query": "hijab woman healthy lifestyle",
+      "design": {
+        "layout": "HERO_TYPOGRAPHIC",
+        "mood": "PREMIUM_DARK",
+        "emphasis_word": "kata penting dari title",
+        "decoration": "SLIDE 01",
+        "stat_value": null
+      }
     }
   ],
   "caption_v1": "...",

@@ -19,14 +19,124 @@ const getSupabase = () => {
   return _supabaseCache;
 };
 
-const SOCIAL_HANDLE = "@mbaktila";
 const PANORAMA_URL = "https://images.unsplash.com/photo-1543429302-3c82d41fa6e9?q=80&w=3500&auto=format&fit=crop";
+
+export type HandlePosition =
+  | 'top-left' | 'top-right'
+  | 'bottom-left' | 'bottom-right'
+  | 'none';
+
+export type CounterFormat =
+  | 'numeric'    // 01 / 06
+  | 'written'    // 1 of 6
+  | 'dots'       // ● ● ○ ○ ○ ○
+  | 'none';
+
+export type CounterPosition =
+  | 'top-left' | 'top-right'
+  | 'bottom-left' | 'bottom-right';
+
+export interface CarouselBrandingSettings {
+  handle: string;
+  handlePosition: HandlePosition;
+  counterFormat: CounterFormat;
+  counterPosition: CounterPosition;
+}
+
+export const DEFAULT_BRANDING: CarouselBrandingSettings = {
+  handle: '@username',
+  handlePosition: 'top-right',
+  counterFormat: 'numeric',
+  counterPosition: 'bottom-right',
+};
+
+function positionStyle(pos: HandlePosition | CounterPosition): string {
+  const map: Record<string, string> = {
+    'top-left':     'top: 60px; left: 80px;',
+    'top-right':    'top: 60px; right: 80px;',
+    'bottom-left':  'bottom: 60px; left: 80px;',
+    'bottom-right': 'bottom: 60px; right: 80px;',
+  };
+  return map[pos] || map['top-right'];
+}
+
+function renderHandleHtml(settings: CarouselBrandingSettings, textColor: string): string {
+  if (settings.handlePosition === 'none' || !settings.handle) return '';
+  return `<div style="position:absolute;${positionStyle(settings.handlePosition)}font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;letter-spacing:0.2em;text-transform:uppercase;opacity:0.5;color:${textColor};z-index:20;">${settings.handle}</div>`;
+}
+
+function renderCounterHtml(
+  index: number,
+  total: number,
+  settings: CarouselBrandingSettings,
+  textColor: string,
+  accentColor: string
+): string {
+  if (settings.counterFormat === 'none') return '';
+
+  let label = '';
+  if (settings.counterFormat === 'numeric') {
+    label = `${String(index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
+  } else if (settings.counterFormat === 'written') {
+    label = `${index + 1} of ${total}`;
+  } else if (settings.counterFormat === 'dots') {
+    label = Array.from({ length: total })
+      .map((_, i) => i === index ? `<span style="color:${accentColor}">●</span>` : '○')
+      .join(' ');
+  }
+
+  return `<div style="position:absolute;${positionStyle(settings.counterPosition)}font-family:'DM Sans',sans-serif;font-size:13px;letter-spacing:0.2em;opacity:0.35;color:${textColor};z-index:20;">${label}</div>`;
+}
 
 export interface VisualTheme {
   primary: string;
   accent: string;
   text: string;
   decoration: string;
+}
+
+export type LayoutType =
+  | 'HERO_TYPOGRAPHIC'
+  | 'SPLIT_IMAGE_TEXT'
+  | 'FULL_BLEED_IMAGE'
+  | 'MINIMAL_QUOTE'
+  | 'MAGAZINE_EDITORIAL'
+  | 'STAT_HIGHLIGHT';
+
+export type MoodType = 'PREMIUM_DARK' | 'LIGHT_AIRY' | 'ACCENT_DOMINANT';
+
+export interface SlideDesign {
+  layout: LayoutType;
+  mood: MoodType;
+  emphasis_word?: string;
+  decoration?: string;
+  stat_value?: string | null;
+}
+
+const VALID_LAYOUTS: LayoutType[] = [
+  'HERO_TYPOGRAPHIC', 'SPLIT_IMAGE_TEXT', 'FULL_BLEED_IMAGE',
+  'MINIMAL_QUOTE', 'MAGAZINE_EDITORIAL', 'STAT_HIGHLIGHT',
+];
+const VALID_MOODS: MoodType[] = ['PREMIUM_DARK', 'LIGHT_AIRY', 'ACCENT_DOMINANT'];
+
+const normalizeDesign = (design: any): SlideDesign => ({
+  layout: VALID_LAYOUTS.includes(design?.layout) ? design.layout : 'SPLIT_IMAGE_TEXT',
+  mood: VALID_MOODS.includes(design?.mood) ? design.mood : 'PREMIUM_DARK',
+  emphasis_word: design?.emphasis_word || '',
+  decoration: design?.decoration || '',
+  stat_value: design?.stat_value || null,
+});
+
+function resolveThemeByMood(baseTheme: VisualTheme, mood: MoodType): VisualTheme {
+  switch (mood) {
+    case 'LIGHT_AIRY':
+      return { primary: '#FAF9F6', accent: baseTheme.accent, text: '#1C1C1E', decoration: 'soft-glow' };
+    case 'ACCENT_DOMINANT':
+      return { primary: baseTheme.accent, accent: '#FFFFFF', text: '#FFFFFF', decoration: baseTheme.decoration };
+    case 'PREMIUM_DARK':
+    default:
+      return baseTheme;
+  }
 }
 
 /**
@@ -74,147 +184,225 @@ export const fetchRepresentativeImage = async (query: string): Promise<string | 
   return null;
 };
 
-/**
- * 🏗️ TEMPLATE: HTML for Carousel
- */
-const getHtmlTemplate = (
-  title: string,
-  body: string,
-  index: number,
-  totalSlides: number,
-  stockImageUrl: string | null,
-  theme: VisualTheme
-) => {
-  const hasImage = !!stockImageUrl;
-  const isAlt = index % 2 === 1; // Alternating layout
-  const bgOffsetX = - (index * 1080);
-  const isLightMode = theme.primary.toLowerCase() === '#fff5f7' || theme.primary.toLowerCase() === '#ffffff' || theme.text === '#2d3748';
-  
-  const accentColor = '#00A896'; // Dashboard Teal
-  const labelColor = isLightMode ? '#1C1C1E' : '#FFFFFF';
-  const bgColor = isLightMode ? '#FAF9F6' : theme.primary; // Soft off-white for light mode
-  
-  const vignette = isLightMode 
-    ? `linear-gradient(to right, ${bgColor} 0%, ${bgColor}f2 30%, ${bgColor}00 100%)`
-    : `linear-gradient(to right, rgba(28,28,30,0.95) 0%, rgba(28,28,30,0.85) 50%, rgba(28,28,30,0) 100%)`;
+const FONT_IMPORT = `@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,500;0,700;1,700&display=swap');`;
 
-  return `
-<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
-    
-    body {
-      margin: 0; padding: 0;
-      width: 1080px; height: 1080px;
-      font-family: 'DM Sans', sans-serif;
-      overflow: hidden;
-      background: ${bgColor};
-      color: ${theme.text};
-      display: flex;
-    }
-
-    .paper-overlay {
-      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-      background-image: url('https://www.transparenttextures.com/patterns/natural-paper.png');
-      opacity: ${isLightMode ? '0.2' : '0.05'};
-      pointer-events: none; z-index: 50;
-    }
-
-    .slide-container {
-      position: relative;
-      width: 1080px; height: 1080px;
-      display: flex;
-      flex-direction: ${isAlt ? 'row-reverse' : 'row'};
-    }
-
-    .image-section {
-      display: ${hasImage ? 'block' : 'none'};
-      width: 540px; height: 100%; position: relative; overflow: hidden;
-    }
-    .image-section img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.9); }
-    
-    .content-section {
-      flex: 1; height: 100%; position: relative;
-      display: flex; flex-direction: column; justify-content: center;
-      padding: 80px; box-sizing: border-box; z-index: 10;
-      text-align: ${isAlt ? 'right' : 'left'};
-    }
-
-    .vignette-overlay {
-      position: absolute; top: 0; ${isAlt ? 'right' : 'left'}: 0;
-      width: 100%; height: 100%;
-      background: ${vignette};
-      transform: ${isAlt ? 'scaleX(-1)' : 'none'};
-      z-index: -1;
-    }
-
-    .panoramic-texture {
-      position: absolute; top: 0; left: 0; width: ${totalSlides * 1080}px; height: 1080px;
-      background-image: url('${PANORAMA_URL}'); background-size: cover;
-      transform: translateX(${bgOffsetX}px);
-      filter: grayscale(1) opacity(0.15); z-index: -2;
-    }
-
-    .index-badge {
-      position: absolute; bottom: 80px; right: 80px;
-      font-size: 14px; font-weight: 700; text-transform: uppercase; tracking: 0.3em;
-      color: ${labelColor}; display: flex; align-items: center; gap: 12px;
-      opacity: 0.4;
-    }
-    .index-badge::before {
-      content: ""; width: 25px; height: 1px; background: ${accentColor}; opacity: ${isLightMode ? '0.2' : '0.4'};
-      order: 1;
-    }
-
-    .footer {
-      position: absolute; top: 80px; right: 80px;
-      display: flex; align-items: center; gap: 8px;
-      color: ${labelColor}; font-weight: 700; font-size: 14px; 
-      text-transform: uppercase; tracking: 0.3em; opacity: 0.6;
-    }
-
-    h1 { 
-      font-family: 'Playfair Display', serif;
-      font-size: 84px; font-weight: 700; line-height: 1.0; margin: 0 0 28px 0; 
-      color: ${theme.text}; text-wrap: balance;
-      letter-spacing: -0.02em;
-    }
-    h1 span { color: ${accentColor}; font-style: italic; font-weight: 500; }
-
-    p { 
-      font-size: 34px; line-height: 1.55; font-weight: 400; 
-      color: ${theme.text}; opacity: 0.8; margin: 0; text-wrap: balance; 
-      max-width: 620px;
-      ${isAlt ? 'margin-left: auto;' : ''}
-      letter-spacing: -0.01em;
-    }
-  </style>
-</head>
-<body>
-  <div class="slide-container">
-    <div class="paper-overlay"></div>
-    <div class="image-section">${stockImageUrl ? `<img src="${stockImageUrl}">` : ''}</div>
-    <div class="content-section">
-      <div class="vignette-overlay"></div>
-      <div class="panoramic-texture"></div>
-      
-      <div class="index-badge">
-        ${(index + 1).toString().padStart(2, '0')} 
-        <span style="opacity: 0.4; margin: 0 4px;">/</span> 
-        ${totalSlides.toString().padStart(2, '0')}
-      </div>
-      
-      <h1>${title.replace(/(.*)/, '$1')}</h1>
-      <p>${body}</p>
-      
-      <div class="footer">${SOCIAL_HANDLE}</div>
-    </div>
-  </div>
-</body>
-</html>
+const baseStyles = (theme: VisualTheme) => `
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { margin: 0; width: 1080px; height: 1080px; font-family: 'DM Sans', sans-serif; overflow: hidden; background: ${theme.primary}; color: ${theme.text}; }
 `;
+
+function highlightTitle(title: string, emphasisWord: string, accentColor: string): string {
+  if (!emphasisWord || !title.includes(emphasisWord)) return title;
+  return title.replace(emphasisWord, `<span style="color:${accentColor};font-style:italic">${emphasisWord}</span>`);
+}
+
+function renderHeroTypographic(
+  slide: { title: string; body: string },
+  theme: VisualTheme,
+  design: SlideDesign,
+  index: number,
+  total: number,
+  _imageUrl: string | null,
+  branding: CarouselBrandingSettings
+): string {
+  const titled = highlightTitle(slide.title, design.emphasis_word || '', theme.accent);
+  return `<!DOCTYPE html><html><head><style>${FONT_IMPORT}${baseStyles(theme)}
+    .slide { width: 1080px; height: 1080px; position: relative; padding: 100px 80px; display: flex; flex-direction: column; justify-content: center; }
+    .decoration { font-size: 12px; letter-spacing: 0.35em; opacity: 0.45; margin-bottom: 40px; text-transform: uppercase; color: ${theme.accent}; }
+    .hero-title { font-family: 'Playfair Display', serif; font-size: 128px; line-height: 0.95; font-weight: 700; letter-spacing: -0.03em; max-width: 900px; }
+    .body-text { font-size: 28px; margin-top: 40px; opacity: 0.7; max-width: 680px; line-height: 1.5; }
+    .accent-line { width: 60px; height: 3px; background: ${theme.accent}; margin-bottom: 48px; }
+  </style></head><body>
+    <div class="slide">
+      <div class="accent-line"></div>
+      ${design.decoration ? `<div class="decoration">${design.decoration}</div>` : ''}
+      <div class="hero-title">${titled}</div>
+      <div class="body-text">${slide.body}</div>
+      ${renderHandleHtml(branding, theme.text)}
+      ${renderCounterHtml(index, total, branding, theme.text, theme.accent)}
+    </div>
+  </body></html>`;
+}
+
+function renderSplitImageText(
+  slide: { title: string; body: string },
+  theme: VisualTheme,
+  design: SlideDesign,
+  index: number,
+  total: number,
+  imageUrl: string | null,
+  branding: CarouselBrandingSettings
+): string {
+  const isAlt = index % 2 === 1;
+  const titled = highlightTitle(slide.title, design.emphasis_word || '', theme.accent);
+  const isLight = theme.text === '#1C1C1E';
+  const vignette = isLight
+    ? `linear-gradient(to right, ${theme.primary} 0%, ${theme.primary}f0 35%, ${theme.primary}00 100%)`
+    : `linear-gradient(to right, rgba(10,15,13,0.95) 0%, rgba(10,15,13,0.8) 45%, rgba(10,15,13,0) 100%)`;
+
+  return `<!DOCTYPE html><html><head><style>${FONT_IMPORT}${baseStyles(theme)}
+    .slide { width: 1080px; height: 1080px; position: relative; display: flex; flex-direction: ${isAlt ? 'row-reverse' : 'row'}; }
+    .img-section { width: 540px; height: 100%; overflow: hidden; flex-shrink: 0; }
+    .img-section img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.88); }
+    .content { flex: 1; height: 100%; position: relative; display: flex; flex-direction: column; justify-content: center; padding: 80px; z-index: 10; text-align: ${isAlt ? 'right' : 'left'}; }
+    .vignette { position: absolute; inset: 0; background: ${vignette}; transform: ${isAlt ? 'scaleX(-1)' : 'none'}; z-index: -1; }
+    h1 { font-family: 'Playfair Display', serif; font-size: 80px; font-weight: 700; line-height: 1.0; letter-spacing: -0.02em; margin-bottom: 28px; }
+    p { font-size: 32px; line-height: 1.55; opacity: 0.8; max-width: 580px; ${isAlt ? 'margin-left: auto;' : ''} }
+    .decoration { font-size: 11px; letter-spacing: 0.35em; opacity: 0.45; margin-bottom: 20px; text-transform: uppercase; color: ${theme.accent}; }
+  </style></head><body>
+    <div class="slide">
+      ${imageUrl ? `<div class="img-section"><img src="${imageUrl}"></div>` : ''}
+      <div class="content">
+        <div class="vignette"></div>
+        ${design.decoration ? `<div class="decoration">${design.decoration}</div>` : ''}
+        <h1>${titled}</h1>
+        <p>${slide.body}</p>
+      </div>
+      ${renderHandleHtml(branding, theme.text)}
+      ${renderCounterHtml(index, total, branding, theme.text, theme.accent)}
+    </div>
+  </body></html>`;
+}
+
+function renderFullBleedImage(
+  slide: { title: string; body: string },
+  theme: VisualTheme,
+  design: SlideDesign,
+  index: number,
+  total: number,
+  imageUrl: string | null,
+  branding: CarouselBrandingSettings
+): string {
+  const titled = highlightTitle(slide.title, design.emphasis_word || '', theme.accent);
+  const bg = imageUrl ? `url('${imageUrl}') center/cover no-repeat` : theme.primary;
+  return `<!DOCTYPE html><html><head><style>${FONT_IMPORT}${baseStyles(theme)}
+    .slide { width: 1080px; height: 1080px; position: relative; background: ${bg}; }
+    .overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.3) 55%, transparent 100%); }
+    .content { position: absolute; bottom: 80px; left: 80px; right: 80px; z-index: 10; color: #fff; }
+    .decoration { font-size: 11px; letter-spacing: 0.4em; opacity: 0.55; margin-bottom: 24px; text-transform: uppercase; color: ${theme.accent}; }
+    h1 { font-family: 'Playfair Display', serif; font-size: 88px; line-height: 1.0; font-weight: 700; letter-spacing: -0.02em; margin-bottom: 24px; }
+    p { font-size: 28px; opacity: 0.85; line-height: 1.5; max-width: 800px; }
+  </style></head><body>
+    <div class="slide">
+      <div class="overlay"></div>
+      ${renderHandleHtml(branding, '#FFFFFF')}
+      ${renderCounterHtml(index, total, branding, '#FFFFFF', theme.accent)}
+      <div class="content">
+        ${design.decoration ? `<div class="decoration">${design.decoration}</div>` : ''}
+        <h1>${titled}</h1>
+        <p>${slide.body}</p>
+      </div>
+    </div>
+  </body></html>`;
+}
+
+function renderMinimalQuote(
+  slide: { title: string; body: string },
+  theme: VisualTheme,
+  design: SlideDesign,
+  index: number,
+  total: number,
+  _imageUrl: string | null,
+  branding: CarouselBrandingSettings
+): string {
+  const titled = highlightTitle(slide.title, design.emphasis_word || '', theme.accent);
+  return `<!DOCTYPE html><html><head><style>${FONT_IMPORT}${baseStyles(theme)}
+    .slide { width: 1080px; height: 1080px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 120px; text-align: center; }
+    .decoration { font-size: 11px; letter-spacing: 0.4em; opacity: 0.4; margin-bottom: 60px; text-transform: uppercase; color: ${theme.accent}; }
+    h1 { font-family: 'Playfair Display', serif; font-size: 72px; font-weight: 500; line-height: 1.15; max-width: 780px; letter-spacing: -0.02em; }
+    .divider { width: 40px; height: 2px; background: ${theme.accent}; margin: 40px auto; }
+    p { font-size: 26px; opacity: 0.7; max-width: 620px; line-height: 1.55; }
+  </style></head><body>
+    <div class="slide">
+      ${design.decoration ? `<div class="decoration">${design.decoration}</div>` : ''}
+      <h1>${titled}</h1>
+      <div class="divider"></div>
+      <p>${slide.body}</p>
+      ${renderHandleHtml(branding, theme.text)}
+      ${renderCounterHtml(index, total, branding, theme.text, theme.accent)}
+    </div>
+  </body></html>`;
+}
+
+function renderMagazineEditorial(
+  slide: { title: string; body: string },
+  theme: VisualTheme,
+  design: SlideDesign,
+  index: number,
+  total: number,
+  imageUrl: string | null,
+  branding: CarouselBrandingSettings
+): string {
+  const titled = highlightTitle(slide.title, design.emphasis_word || '', theme.accent);
+  return `<!DOCTYPE html><html><head><style>${FONT_IMPORT}${baseStyles(theme)}
+    .slide { width: 1080px; height: 1080px; position: relative; padding: 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .left { padding-top: 40px; }
+    .subhead { font-size: 13px; letter-spacing: 0.3em; margin-bottom: 24px; color: ${theme.accent}; text-transform: uppercase; }
+    .pull-quote { font-family: 'Playfair Display', serif; font-size: 62px; font-style: italic; line-height: 1.1; border-left: 4px solid ${theme.accent}; padding-left: 28px; }
+    .right { font-size: 26px; line-height: 1.7; opacity: 0.85; }
+    .img-block { width: 100%; height: 260px; object-fit: cover; border-radius: 4px; margin-bottom: 28px; filter: brightness(0.88); }
+  </style></head><body>
+    <div class="slide">
+      <div class="left">
+        ${design.decoration ? `<div class="subhead">${design.decoration}</div>` : ''}
+        <div class="pull-quote">${titled}</div>
+      </div>
+      <div class="right">
+        ${imageUrl ? `<img class="img-block" src="${imageUrl}">` : ''}
+        ${slide.body}
+      </div>
+      ${renderHandleHtml(branding, theme.text)}
+      ${renderCounterHtml(index, total, branding, theme.text, theme.accent)}
+    </div>
+  </body></html>`;
+}
+
+function renderStatHighlight(
+  slide: { title: string; body: string },
+  theme: VisualTheme,
+  design: SlideDesign,
+  index: number,
+  total: number,
+  _imageUrl: string | null,
+  branding: CarouselBrandingSettings
+): string {
+  const statVal = design.stat_value || '';
+  const statFontSize = statVal.length <= 3 ? '320px' : statVal.length <= 5 ? '240px' : '180px';
+  return `<!DOCTYPE html><html><head><style>${FONT_IMPORT}${baseStyles(theme)}
+    .slide { width: 1080px; height: 1080px; position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 80px; text-align: center; }
+    .decoration { font-size: 12px; letter-spacing: 0.4em; margin-bottom: 32px; opacity: 0.55; text-transform: uppercase; color: ${theme.accent}; }
+    .stat-value { font-family: 'Playfair Display', serif; font-size: ${statFontSize}; line-height: 0.85; font-weight: 700; color: ${theme.accent}; letter-spacing: -0.04em; }
+    .stat-label { font-size: 34px; margin-top: 40px; font-weight: 700; letter-spacing: -0.01em; }
+    .body { font-size: 22px; opacity: 0.7; margin-top: 20px; max-width: 680px; line-height: 1.55; }
+  </style></head><body>
+    <div class="slide">
+      ${design.decoration ? `<div class="decoration">${design.decoration}</div>` : ''}
+      ${statVal ? `<div class="stat-value">${statVal}</div>` : ''}
+      <div class="stat-label">${slide.title}</div>
+      <div class="body">${slide.body}</div>
+      ${renderHandleHtml(branding, theme.text)}
+      ${renderCounterHtml(index, total, branding, theme.text, theme.accent)}
+    </div>
+  </body></html>`;
+}
+
+type LayoutRenderer = (
+  slide: { title: string; body: string },
+  theme: VisualTheme,
+  design: SlideDesign,
+  index: number,
+  total: number,
+  imageUrl: string | null,
+  branding: CarouselBrandingSettings
+) => string;
+
+const layoutRenderers: Record<LayoutType, LayoutRenderer> = {
+  HERO_TYPOGRAPHIC: renderHeroTypographic,
+  SPLIT_IMAGE_TEXT: renderSplitImageText,
+  FULL_BLEED_IMAGE: renderFullBleedImage,
+  MINIMAL_QUOTE: renderMinimalQuote,
+  MAGAZINE_EDITORIAL: renderMagazineEditorial,
+  STAT_HIGHLIGHT: renderStatHighlight,
 };
 
 /**
@@ -251,20 +439,21 @@ const generateViaBrowserlessRest = async (
  * 🚀 ENGINE: Generate Images
  */
 export const generateCarouselImages = async (
-  slides: { title: string; body: string; image_search_query?: string }[],
-  theme?: VisualTheme
+  slides: { title: string; body: string; image_search_query?: string; design?: any }[],
+  theme?: VisualTheme,
+  branding?: CarouselBrandingSettings
 ): Promise<string[]> => {
   const supabase = getSupabase();
   const supabaseBucket = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || 'bp-images';
   const finalTheme: VisualTheme = theme || { primary: "#0A0F0D", accent: "#F59E0B", text: "#FFFFFF", decoration: "gold-glitter" };
+  const finalBranding: CarouselBrandingSettings = branding || DEFAULT_BRANDING;
 
   const sessionId = uuidv4().slice(0, 8);
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const folderPath = `production/carousel_${timestamp}_${sessionId}`;
   const publicUrls: string[] = [];
 
-  let representativeImageUrl = slides[0]?.image_search_query ? await fetchRepresentativeImage(slides[0].image_search_query) : null;
-  console.log(`🎨 Branding Applied: ${finalTheme.decoration.toUpperCase()} | Uploading to ${folderPath}...`);
+  console.log(`🎨 Branding Applied: ${finalTheme.decoration.toUpperCase()} | Handle: ${finalBranding.handle} | Uploading to ${folderPath}...`);
 
   const token = process.env.BROWSERLESS_TOKEN;
   if (!token) {
@@ -274,10 +463,20 @@ export const generateCarouselImages = async (
 
   for (let i = 0; i < slides.length; i++) {
     try {
-      const imageUrl = (i === 0) ? representativeImageUrl : null;
-      const html = getHtmlTemplate(slides[i].title, slides[i].body, i, slides.length, imageUrl, finalTheme);
+      const slide = slides[i];
+      const design = normalizeDesign(slide.design);
+      const resolvedTheme = resolveThemeByMood(finalTheme, design.mood);
 
-      console.log(`🌐 Rendering Slide ${i+1}/${slides.length} via Browserless...`);
+      const needsImage = ['SPLIT_IMAGE_TEXT', 'FULL_BLEED_IMAGE', 'MAGAZINE_EDITORIAL'].includes(design.layout);
+      let imageUrl: string | null = null;
+      if (needsImage && slide.image_search_query) {
+        imageUrl = await fetchRepresentativeImage(slide.image_search_query);
+      }
+
+      const renderer = layoutRenderers[design.layout] || layoutRenderers['SPLIT_IMAGE_TEXT'];
+      const html = renderer(slide, resolvedTheme, design, i, slides.length, imageUrl, finalBranding);
+
+      console.log(`🌐 Rendering Slide ${i+1}/${slides.length} [${design.layout}/${design.mood}] via Browserless...`);
       const buffer = await generateViaBrowserlessRest(html, token);
 
       const fullPath = `${folderPath}/slide_${i + 1}.png`;

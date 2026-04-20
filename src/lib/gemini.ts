@@ -52,7 +52,7 @@ Setiap slide di carousel_slides HARUS punya field design dengan struktur:
     "layout": "HERO_TYPOGRAPHIC | SPLIT_IMAGE_TEXT | FULL_BLEED_IMAGE | MINIMAL_QUOTE | MAGAZINE_EDITORIAL | STAT_HIGHLIGHT",
     "mood": "PREMIUM_DARK | LIGHT_AIRY | ACCENT_DOMINANT",
     "emphasis_word": "kata paling penting dari title untuk di-highlight",
-    "decoration": "optional content-category label, misal 'HOOK', 'FAKTA', 'SOLUSI', 'TIPS', 'BUKTI', 'CTA' — JANGAN pakai 'SLIDE 01' atau nomor slide",
+    "decoration": "optional decorative element, keep it minimal or empty - avoid content category labels like 'HOOK', 'FAKTA', 'SOLUSI', etc.",
     "stat_value": "optional, hanya untuk STAT_HIGHLIGHT, misal '87%' atau '3 dari 5'"
   }
 }
@@ -104,14 +104,14 @@ FORMAT OUTPUT WAJIB JSON:
         "layout": "HERO_TYPOGRAPHIC",
         "mood": "PREMIUM_DARK",
         "emphasis_word": "kata penting dari title",
-        "decoration": "HOOK",
+        "decoration": "",
         "stat_value": null
       }
     }
   ],
   "caption_v1": "...",
   "caption_v2": "Caption Edukasi/Tips (Faktual, bermanfaat, inclusive tone 'Kita')",
-  "hashtag": "#BritishPropolis #SehatBarengKita #TipsKesehatan #PeluangBisnis",
+  "hashtag": "Generate 5-7 relevant hashtags based on the content topic, product category, pain points, and psychological motives. Make them engaging, trending, and specific to the audience's interests.",
   "waktu_posting": "Waktu terbaik posting hari ini",
   "rekomendasi_visual": "Saran visual/video background",
   "post_format": "feed|carousel|story|reels",

@@ -23,7 +23,7 @@ export default function RootCreatePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [isOptimizing, setIsOptimizing] = useState(false);
   const [error, setError] = useState('');
-  const [brandingOpen, setBrandingOpen] = useState(false);
+  const [brandingOpen, setBrandingOpen] = useState(true);
   const [branding, setBranding] = useState<CarouselBrandingSettings>(DEFAULT_BRANDING);
 
   useEffect(() => {
@@ -108,7 +108,7 @@ export default function RootCreatePage() {
             Bring your stories <span className="text-[#00A896] italic">to life</span>.
           </h1>
           <p className="text-[14px] md:text-[15px] text-[#9B8EA0] max-w-lg mx-auto leading-relaxed px-4">
-            Curate high-impact social media content by following our two-step editorial process.
+            Curate high-impact social media content by following our three-step editorial process.
           </p>
         </div>
       </div>
@@ -168,189 +168,240 @@ export default function RootCreatePage() {
         </div>
       </div>
 
-      {/* STEP 2: CONTENT INPUT */}
+      {/* STEPS 2 + 3 + GENERATE: appear together after strategy selected */}
       <AnimatePresence>
         {selectedType && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 20 }}
-            className="space-y-6 pt-4"
+            className="space-y-8 pt-4"
           >
-            <div className="flex items-center gap-4 px-2">
-               <div className="w-8 h-8 rounded-full bg-[#00A896] text-white flex items-center justify-center text-[12px] font-black shadow-md">2</div>
-               <div>
+            {/* ── STEP 2: SOURCE DATA ── */}
+            <div className="space-y-6">
+              <div className="flex items-center gap-4 px-2">
+                <div className="w-8 h-8 rounded-full bg-[#00A896] text-white flex items-center justify-center text-[12px] font-black shadow-md">2</div>
+                <div>
                   <h2 className="text-[14px] font-black text-[#1C1C1E] uppercase tracking-widest">Provide Source Data</h2>
                   <p className="text-[12px] text-[#9B8EA0]">Paste your raw testimonials or context here.</p>
-               </div>
-            </div>
-
-            <div className="space-y-8">
-              <InputArea 
+                </div>
+              </div>
+              <InputArea
                 value={inputText}
                 onChange={(e) => setInputText(e.target.value)}
-                onSend={handleGenerate}
                 onOptimize={handleOptimize}
                 onTemplateSelect={handleTemplateSelect}
                 isOptimizing={isOptimizing}
                 disabled={isLoading}
                 isTypeSelected={!!selectedType}
+                hideGenerate={true}
                 placeholder="Paste your source text here (e.g. Testimonials, Daily Reports...)"
               />
-
-              {isLoading && (
-                <div className="flex flex-col items-center gap-4 py-6">
-                  <Loader2 className="w-8 h-8 animate-spin text-[#00A896]" />
-                  <p className="text-[12px] font-bold text-[#00A896] uppercase tracking-[0.2em] italic">
-                    AI Editorial Assistant is Curating...
-                  </p>
-                </div>
-              )}
-
-              {error && (
-                <div className="flex items-center gap-3 p-5 bg-[#FEF2F2] border border-rose-100 rounded-2xl text-rose-600 text-[13px] font-medium shadow-sm">
-                  <AlertCircle size={18} /> {error}
-                </div>
-              )}
             </div>
+
+            {/* ── STEP 3: SLIDE BRANDING ── */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 px-2">
+                <div className="w-8 h-8 rounded-full bg-[#00A896] text-white flex items-center justify-center text-[12px] font-black shadow-md">3</div>
+                <div>
+                  <h2 className="text-[14px] font-black text-[#1C1C1E] uppercase tracking-widest">Slide Branding</h2>
+                  <p className="text-[12px] text-[#9B8EA0]">Atur username dan nomor slide sebelum generate.</p>
+                </div>
+              </div>
+
+              <div className="border border-[#E8E5DF] rounded-2xl overflow-hidden bg-white shadow-sm">
+                <button
+                  onClick={() => setBrandingOpen(o => !o)}
+                  className="w-full flex items-center justify-between px-6 py-4 hover:bg-[#F7F6F2] transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <Settings2 size={15} className="text-[#9B8EA0]" />
+                    <span className="text-[12px] font-black uppercase tracking-widest text-[#1C1C1E]">
+                      {branding.handle || '@username'}
+                    </span>
+                    <span className="text-[11px] text-[#9B8EA0] font-medium">
+                      · {branding.handlePosition === 'none' ? 'handle hidden' : branding.handlePosition}
+                      {branding.counterFormat !== 'none' ? ` · counter ${branding.counterFormat}` : ' · no counter'}
+                    </span>
+                  </div>
+                  {brandingOpen ? <ChevronUp size={15} className="text-[#9B8EA0]" /> : <ChevronDown size={15} className="text-[#9B8EA0]" />}
+                </button>
+
+                <AnimatePresence>
+                  {brandingOpen && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.2 }}
+                      className="overflow-hidden"
+                    >
+                      <div className="px-6 pb-6 pt-2 space-y-6 border-t border-[#F0EEE8]">
+
+                        {/* Handle */}
+                        <div className="space-y-3">
+                          <label className="text-[11px] font-bold text-[#9B8EA0] uppercase tracking-[0.2em]">Username / Handle</label>
+                          <div className="flex gap-3 flex-wrap">
+                            <input
+                              type="text"
+                              value={branding.handle}
+                              onChange={e => updateBranding({ handle: e.target.value })}
+                              placeholder="@username"
+                              className="flex-1 min-w-[160px] px-4 py-2.5 text-[13px] border border-[#E8E5DF] rounded-xl focus:outline-none focus:border-[#00A896] transition-colors"
+                            />
+                            <div className="flex gap-2 flex-wrap">
+                              {(['top-left', 'top-right', 'bottom-left', 'bottom-right', 'none'] as HandlePosition[]).map(pos => (
+                                <button
+                                  key={pos}
+                                  onClick={() => updateBranding({ handlePosition: pos })}
+                                  className={`px-3 py-2 text-[11px] font-bold rounded-lg border transition-all ${
+                                    branding.handlePosition === pos
+                                      ? 'bg-[#00A896] text-white border-[#00A896]'
+                                      : 'border-[#E8E5DF] text-[#9B8EA0] hover:border-[#00A896]/40'
+                                  }`}
+                                >
+                                  {pos === 'none' ? 'Sembunyikan' : pos.replace('-', ' ')}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Counter */}
+                        <div className="space-y-3">
+                          <label className="text-[11px] font-bold text-[#9B8EA0] uppercase tracking-[0.2em]">Nomor Slide</label>
+                          <div className="flex gap-2 flex-wrap">
+                            {([
+                              { val: 'numeric', label: '01 / 06' },
+                              { val: 'written', label: '1 of 6' },
+                              { val: 'dots',    label: '— ○ ○ ○' },
+                              { val: 'none',    label: 'Sembunyikan' },
+                            ] as { val: CounterFormat; label: string }[]).map(({ val, label }) => (
+                              <button
+                                key={val}
+                                onClick={() => updateBranding({ counterFormat: val })}
+                                className={`px-3 py-2 text-[11px] font-bold rounded-lg border transition-all ${
+                                  branding.counterFormat === val
+                                    ? 'bg-[#00A896] text-white border-[#00A896]'
+                                    : 'border-[#E8E5DF] text-[#9B8EA0] hover:border-[#00A896]/40'
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                          {branding.counterFormat !== 'none' && (
+                            <div className="flex gap-2 flex-wrap">
+                              {(['top-left', 'top-right', 'bottom-left', 'bottom-right'] as CounterPosition[]).map(pos => (
+                                <button
+                                  key={pos}
+                                  onClick={() => updateBranding({ counterPosition: pos })}
+                                  className={`px-3 py-2 text-[11px] font-bold rounded-lg border transition-all ${
+                                    branding.counterPosition === pos
+                                      ? 'bg-[#1C1C1E] text-white border-[#1C1C1E]'
+                                      : 'border-[#E8E5DF] text-[#9B8EA0] hover:border-[#1C1C1E]/30'
+                                  }`}
+                                >
+                                  {pos.replace('-', ' ')}
+                                </button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Live Preview */}
+                        <div className="bg-[#0A0F0D] rounded-xl relative overflow-hidden" style={{ height: 120 }}>
+                          <span className="text-[10px] text-[#9B8EA0] uppercase tracking-widest absolute top-4 left-5 z-10">Preview</span>
+
+                          {branding.handlePosition !== 'none' && branding.handle && (
+                            <span className={`absolute text-[10px] font-bold text-white/50 uppercase tracking-wider z-10 ${
+                              branding.handlePosition === 'top-left'    ? 'top-4 left-16' :
+                              branding.handlePosition === 'top-right'   ? 'top-4 right-5' :
+                              branding.handlePosition === 'bottom-left' ? 'bottom-4 left-5' :
+                              'bottom-4 right-5'
+                            }`}>{branding.handle}</span>
+                          )}
+
+                          {branding.counterFormat !== 'none' && (
+                            <div className={`absolute flex items-center gap-1 z-10 ${
+                              branding.counterPosition === 'top-left'    ? 'top-4 left-5' :
+                              branding.counterPosition === 'top-right'   ? 'top-4 right-5' :
+                              branding.counterPosition === 'bottom-left' ? 'bottom-4 left-5' :
+                              'bottom-4 right-5'
+                            }`}>
+                              {branding.counterFormat === 'numeric' && (
+                                <span className="text-[10px] text-white/40 tracking-widest">01 / 06</span>
+                              )}
+                              {branding.counterFormat === 'written' && (
+                                <span className="text-[10px] text-white/40 tracking-widest">1 of 6</span>
+                              )}
+                              {branding.counterFormat === 'dots' && (
+                                <div className="flex items-center gap-1">
+                                  <div className="w-4 h-0.5 bg-[#00A896] rounded-full opacity-90" />
+                                  {[1,2,3,4,5].map(i => (
+                                    <div key={i} className="w-1.5 h-1.5 bg-white rounded-full opacity-20" />
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
+            </div>
+
+            {/* ── GENERATE BUTTON ── */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.15 }}
+            >
+              <button
+                onClick={handleGenerate}
+                disabled={isLoading || !inputText.trim()}
+                className={`
+                  w-full h-[60px] flex items-center justify-center gap-3 rounded-2xl
+                  font-black text-[14px] uppercase tracking-[0.15em]
+                  transition-all duration-300 shadow-lg
+                  ${!inputText.trim() || isLoading
+                    ? 'bg-[#E8E5DF] text-[#9B8EA0] cursor-not-allowed shadow-none'
+                    : 'bg-[#00A896] hover:bg-[#008A7B] text-white hover:shadow-xl active:scale-[0.99]'
+                  }
+                `.trim()}
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 size={18} className="animate-spin" />
+                    AI Editorial Assistant is Curating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={16} fill="currentColor" />
+                    Generate Story
+                  </>
+                )}
+              </button>
+            </motion.div>
+
+            {error && (
+              <div className="flex items-center gap-3 p-5 bg-[#FEF2F2] border border-rose-100 rounded-2xl text-rose-600 text-[13px] font-medium shadow-sm">
+                <AlertCircle size={18} /> {error}
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
 
       {!selectedType && (
-         <div className="text-center py-10 opacity-30">
-            <ChevronDown className="w-6 h-6 mx-auto animate-bounce text-[#9B8EA0]" />
-            <p className="text-[11px] font-bold uppercase tracking-widest mt-2">Select a strategy to unlock Step 2</p>
-         </div>
+        <div className="text-center py-10 opacity-30">
+          <ChevronDown className="w-6 h-6 mx-auto animate-bounce text-[#9B8EA0]" />
+          <p className="text-[11px] font-bold uppercase tracking-widest mt-2">Select a strategy to unlock Steps 2 &amp; 3</p>
+        </div>
       )}
-
-      {/* Slide Branding Settings */}
-      <div className="border border-[#E8E5DF] rounded-2xl overflow-hidden bg-white shadow-sm">
-        <button
-          onClick={() => setBrandingOpen(o => !o)}
-          className="w-full flex items-center justify-between px-6 py-4 hover:bg-[#F7F6F2] transition-colors"
-        >
-          <div className="flex items-center gap-3">
-            <Settings2 size={15} className="text-[#9B8EA0]" />
-            <span className="text-[12px] font-black uppercase tracking-widest text-[#1C1C1E]">Slide Branding</span>
-            <span className="text-[11px] text-[#9B8EA0] font-medium">— username &amp; nomor slide</span>
-          </div>
-          {brandingOpen ? <ChevronUp size={15} className="text-[#9B8EA0]" /> : <ChevronDown size={15} className="text-[#9B8EA0]" />}
-        </button>
-
-        <AnimatePresence>
-          {brandingOpen && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <div className="px-6 pb-6 pt-2 space-y-6 border-t border-[#F0EEE8]">
-
-                {/* Handle */}
-                <div className="space-y-3">
-                  <label className="text-[11px] font-bold text-[#9B8EA0] uppercase tracking-[0.2em]">Username / Handle</label>
-                  <div className="flex gap-3 flex-wrap">
-                    <input
-                      type="text"
-                      value={branding.handle}
-                      onChange={e => updateBranding({ handle: e.target.value })}
-                      placeholder="@username"
-                      className="flex-1 min-w-[160px] px-4 py-2.5 text-[13px] border border-[#E8E5DF] rounded-xl focus:outline-none focus:border-[#00A896] transition-colors"
-                    />
-                    <div className="flex gap-2 flex-wrap">
-                      {(['top-left', 'top-right', 'bottom-left', 'bottom-right', 'none'] as HandlePosition[]).map(pos => (
-                        <button
-                          key={pos}
-                          onClick={() => updateBranding({ handlePosition: pos })}
-                          className={`px-3 py-2 text-[11px] font-bold rounded-lg border transition-all ${
-                            branding.handlePosition === pos
-                              ? 'bg-[#00A896] text-white border-[#00A896]'
-                              : 'border-[#E8E5DF] text-[#9B8EA0] hover:border-[#00A896]/40'
-                          }`}
-                        >
-                          {pos === 'none' ? 'Sembunyikan' : pos.replace('-', ' ')}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Counter */}
-                <div className="space-y-3">
-                  <label className="text-[11px] font-bold text-[#9B8EA0] uppercase tracking-[0.2em]">Nomor Slide</label>
-                  <div className="flex gap-2 flex-wrap">
-                    {([
-                      { val: 'numeric', label: '01 / 06' },
-                      { val: 'written', label: '1 of 6' },
-                      { val: 'dots',    label: '● ● ○ ○' },
-                      { val: 'none',    label: 'Sembunyikan' },
-                    ] as { val: CounterFormat; label: string }[]).map(({ val, label }) => (
-                      <button
-                        key={val}
-                        onClick={() => updateBranding({ counterFormat: val })}
-                        className={`px-3 py-2 text-[11px] font-bold rounded-lg border transition-all ${
-                          branding.counterFormat === val
-                            ? 'bg-[#00A896] text-white border-[#00A896]'
-                            : 'border-[#E8E5DF] text-[#9B8EA0] hover:border-[#00A896]/40'
-                        }`}
-                      >
-                        {label}
-                      </button>
-                    ))}
-                  </div>
-                  {branding.counterFormat !== 'none' && (
-                    <div className="flex gap-2 flex-wrap">
-                      {(['top-left', 'top-right', 'bottom-left', 'bottom-right'] as CounterPosition[]).map(pos => (
-                        <button
-                          key={pos}
-                          onClick={() => updateBranding({ counterPosition: pos })}
-                          className={`px-3 py-2 text-[11px] font-bold rounded-lg border transition-all ${
-                            branding.counterPosition === pos
-                              ? 'bg-[#1C1C1E] text-white border-[#1C1C1E]'
-                              : 'border-[#E8E5DF] text-[#9B8EA0] hover:border-[#1C1C1E]/30'
-                          }`}
-                        >
-                          {pos.replace('-', ' ')}
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Live Preview */}
-                <div className="bg-[#0A0F0D] rounded-xl p-5 relative" style={{ height: 120 }}>
-                  <span className="text-[10px] text-[#9B8EA0] uppercase tracking-widest absolute top-4 left-5">Preview</span>
-                  {/* Handle preview */}
-                  {branding.handlePosition !== 'none' && branding.handle && (
-                    <span className={`absolute text-[10px] font-bold text-white/50 uppercase tracking-wider ${
-                      branding.handlePosition === 'top-left' ? 'top-4 left-16' :
-                      branding.handlePosition === 'top-right' ? 'top-4 right-5' :
-                      branding.handlePosition === 'bottom-left' ? 'bottom-4 left-5' :
-                      'bottom-4 right-5'
-                    }`}>{branding.handle}</span>
-                  )}
-                  {/* Counter preview */}
-                  {branding.counterFormat !== 'none' && (
-                    <span className={`absolute text-[10px] text-white/35 tracking-widest ${
-                      branding.counterPosition === 'top-left' ? 'top-4 left-5' :
-                      branding.counterPosition === 'top-right' ? 'top-4 right-5' :
-                      branding.counterPosition === 'bottom-left' ? 'bottom-4 left-5' :
-                      'bottom-4 right-5'
-                    }`}>
-                      {branding.counterFormat === 'numeric' ? '01 / 06' :
-                       branding.counterFormat === 'written' ? '1 of 6' : '● ● ○ ○ ○ ○'}
-                    </span>
-                  )}
-                </div>
-
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
 
       {/* Footer Branding */}
       <div className="text-center pt-8 border-t border-[#F7F6F2]">

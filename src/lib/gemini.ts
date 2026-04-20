@@ -52,7 +52,7 @@ Setiap slide di carousel_slides HARUS punya field design dengan struktur:
     "layout": "HERO_TYPOGRAPHIC | SPLIT_IMAGE_TEXT | FULL_BLEED_IMAGE | MINIMAL_QUOTE | MAGAZINE_EDITORIAL | STAT_HIGHLIGHT",
     "mood": "PREMIUM_DARK | LIGHT_AIRY | ACCENT_DOMINANT",
     "emphasis_word": "kata paling penting dari title untuk di-highlight",
-    "decoration": "optional tagline/label kecil, misal 'TIPS #1' atau 'FAKTA'",
+    "decoration": "optional content-category label, misal 'HOOK', 'FAKTA', 'SOLUSI', 'TIPS', 'BUKTI', 'CTA' — JANGAN pakai 'SLIDE 01' atau nomor slide",
     "stat_value": "optional, hanya untuk STAT_HIGHLIGHT, misal '87%' atau '3 dari 5'"
   }
 }
@@ -104,7 +104,7 @@ FORMAT OUTPUT WAJIB JSON:
         "layout": "HERO_TYPOGRAPHIC",
         "mood": "PREMIUM_DARK",
         "emphasis_word": "kata penting dari title",
-        "decoration": "SLIDE 01",
+        "decoration": "HOOK",
         "stat_value": null
       }
     }

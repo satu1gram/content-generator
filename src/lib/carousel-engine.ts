@@ -74,18 +74,22 @@ function renderCounterHtml(
 ): string {
   if (settings.counterFormat === 'none') return '';
 
-  let label = '';
+  let inner = '';
   if (settings.counterFormat === 'numeric') {
-    label = `${String(index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
+    inner = `<span style="font-family:'DM Sans',sans-serif;font-size:12px;letter-spacing:0.25em;color:${textColor};opacity:0.4;">${String(index + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}</span>`;
   } else if (settings.counterFormat === 'written') {
-    label = `${index + 1} of ${total}`;
+    inner = `<span style="font-family:'DM Sans',sans-serif;font-size:12px;letter-spacing:0.15em;color:${textColor};opacity:0.4;">${index + 1} of ${total}</span>`;
   } else if (settings.counterFormat === 'dots') {
-    label = Array.from({ length: total })
-      .map((_, i) => i === index ? `<span style="color:${accentColor}">●</span>` : '○')
-      .join(' ');
+    const items = Array.from({ length: total }).map((_, i) => {
+      const isActive = i === index;
+      return isActive
+        ? `<span style="display:inline-block;width:18px;height:2px;background:${accentColor};border-radius:2px;vertical-align:middle;margin:0 2px;opacity:0.9;"></span>`
+        : `<span style="display:inline-block;width:5px;height:5px;background:${textColor};border-radius:50%;vertical-align:middle;margin:0 2px;opacity:0.2;"></span>`;
+    });
+    inner = items.join('');
   }
 
-  return `<div style="position:absolute;${positionStyle(settings.counterPosition)}font-family:'DM Sans',sans-serif;font-size:13px;letter-spacing:0.2em;opacity:0.35;color:${textColor};z-index:20;">${label}</div>`;
+  return `<div style="position:absolute;${positionStyle(settings.counterPosition)}z-index:20;display:flex;align-items:center;">${inner}</div>`;
 }
 
 export interface VisualTheme {

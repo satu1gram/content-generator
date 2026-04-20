@@ -1,9 +1,10 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Playfair_Display, DM_Sans, DM_Mono } from "next/font/google";
 import "./globals.css";
 import Sidebar from "@/components/Sidebar";
 import Link from "next/link";
 import StoryFlowLogo from "@/components/ui/StoryFlowLogo";
+import PWAInstaller from "@/components/PWAInstaller";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -21,12 +22,33 @@ const dmMono = DM_Mono({
   variable: '--font-dm-mono'
 });
 
+export const viewport: Viewport = {
+  themeColor: '#00A896',
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+};
+
 export const metadata: Metadata = {
   title: "StoryFlow | AI Digital Contents Studio",
   description: "Advanced AI-powered content generation studio for social media, carousel, and storytelling. Powered by StoryFlow Engine.",
+  manifest: '/manifest.json',
+  appleWebApp: {
+    capable: true,
+    title: 'StoryFlow',
+    statusBarStyle: 'default',
+  },
   icons: {
-    icon: "/brand-logo.png",
-    apple: "/brand-logo.png",
+    icon: [
+      { url: '/icons/icon-48.png',  sizes: '48x48',   type: 'image/png' },
+      { url: '/icons/icon-96.png',  sizes: '96x96',   type: 'image/png' },
+      { url: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+    ],
+    apple: [
+      { url: '/icons/icon-180.png', sizes: '180x180', type: 'image/png' },
+    ],
   },
 };
 
@@ -60,6 +82,7 @@ export default function RootLayout({
             </div>
           </main>
         </div>
+        <PWAInstaller />
       </body>
     </html>
   );

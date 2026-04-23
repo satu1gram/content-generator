@@ -1,5 +1,4 @@
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Lazy Supabase Initializer
@@ -452,7 +451,7 @@ export const generateCarouselImages = async (
   const finalTheme: VisualTheme = theme || { primary: "#0A0F0D", accent: "#F59E0B", text: "#FFFFFF", decoration: "gold-glitter" };
   const finalBranding: CarouselBrandingSettings = branding || DEFAULT_BRANDING;
 
-  const sessionId = uuidv4().slice(0, 8);
+  const sessionId = crypto.randomUUID().slice(0, 8);
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   const folderPath = `production/carousel_${timestamp}_${sessionId}`;
   const publicUrls: string[] = [];

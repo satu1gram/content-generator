@@ -2,22 +2,24 @@ export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import { SYSTEM_PROMPT, generateWithFallback } from '@/lib/gemini';
 import { generateWithGroq } from '@/lib/groq';
+import { generateWithDeepSeek } from '@/lib/deepseek';
 import { generateCarouselImages, splitTextToSlides, CarouselBrandingSettings } from '@/lib/carousel-engine';
 
 export async function POST(req: Request) {
   try {
-    // 1. Environmental Validation - Secure at least one heart
-    const hasGemini = !!process.env.GEMINI_API_KEY;
-    const hasGroq = !!process.env.GROQ_API_KEY;
-    const isEdge = process.env.NEXT_RUNTIME === 'edge';
+    // 1. Environmental Validation
+    const hasDeepSeek = !!process.env.DEEPSEEK_API_KEY;
+    const hasGemini   = !!process.env.GEMINI_API_KEY;
+    const hasGroq     = !!process.env.GROQ_API_KEY;
+    const isEdge      = process.env.NEXT_RUNTIME === 'edge';
 
-    if (!hasGemini && !hasGroq) {
+    if (!hasDeepSeek && !hasGemini && !hasGroq) {
       console.error('❌ Missing API Credentials. Runtime:', isEdge ? 'Edge' : 'Node');
       return NextResponse.json(
-        { 
-          error: 'AI_CONFIGURATION_MISSING', 
-          message: 'Peringatan: API Key (Gemini/Groq) belum terpasang di Cloudflare Dashboard.',
-          required_vars: ['GEMINI_API_KEY', 'GROQ_API_KEY'],
+        {
+          error: 'AI_CONFIGURATION_MISSING',
+          message: 'Peringatan: Tidak ada API Key AI yang terpasang (DeepSeek / Gemini / Groq).',
+          required_vars: ['DEEPSEEK_API_KEY', 'GEMINI_API_KEY', 'GROQ_API_KEY'],
           runtime: isEdge ? 'edge' : 'node'
         },
         { status: 500 }
@@ -39,48 +41,48 @@ export async function POST(req: Request) {
 
     console.log('🏁 Starting Generation for prompt:', prompt.slice(0, 50) + '...');
 
-    // 2. Resilient Generation Loop (Gemini -> Groq Fallback)
+    // 2. Resilient Generation Chain: DeepSeek → Gemini → Groq
     let parsedData: any = null;
-    let fallbackToGroq = false;
 
-    if (hasGemini) {
+    // ── Primary: DeepSeek ──────────────────────────────────────
+    if (!parsedData && hasDeepSeek) {
+      try {
+        console.log('🤖 Attempting DeepSeek Generation...');
+        parsedData = await generateWithDeepSeek(prompt, SYSTEM_PROMPT);
+        console.log('✅ DeepSeek: Success');
+      } catch (err: any) {
+        console.warn('⚠️ DeepSeek Failed:', err.message);
+      }
+    }
+
+    // ── Secondary: Gemini ──────────────────────────────────────
+    if (!parsedData && hasGemini) {
       try {
         console.log('💎 Attempting Gemini Generation...');
         const result = await generateWithFallback(prompt);
-        const response = await result.response;
-        const content = response.text();
-        
-        if (content) {
-          parsedData = JSON.parse(content);
-        } else {
-          fallbackToGroq = true;
-        }
-      } catch (geminiError: any) {
-        console.warn('⚠️ Gemini Failed:', geminiError.message);
-        if (hasGroq) {
-          fallbackToGroq = true;
-        } else {
-          throw geminiError;
-        }
+        const content = result.response.text();
+        if (content) parsedData = JSON.parse(content);
+        console.log('✅ Gemini: Success');
+      } catch (err: any) {
+        console.warn('⚠️ Gemini Failed:', err.message);
       }
-    } else {
-      fallbackToGroq = true;
     }
 
-    // 3. Groq Fallback Execution
-    if (fallbackToGroq && hasGroq) {
+    // ── Tertiary: Groq ─────────────────────────────────────────
+    if (!parsedData && hasGroq) {
       try {
-        console.log('⚡ Using Groq (Llama 3) as Fallback...');
+        console.log('⚡ Attempting Groq Generation (Llama 3)...');
         parsedData = await generateWithGroq(prompt, SYSTEM_PROMPT);
-      } catch (groqError: any) {
-        console.error('❌ Groq Failed:', groqError.message);
-        throw new Error(`Kritikal: Semua AI Gagal. (Groq: ${groqError.message})`);
+        console.log('✅ Groq: Success');
+      } catch (err: any) {
+        console.error('❌ Groq Failed:', err.message);
+        throw new Error(`Kritikal: Semua AI Gagal. (${err.message})`);
       }
     }
 
     if (!parsedData) {
-      console.error('❌ Stage AI: No data returned');
-      throw new Error('API returned no valid data after multiple attempts.');
+      console.error('❌ Stage AI: No data returned from any provider');
+      throw new Error('Semua provider AI gagal menghasilkan konten.');
     }
     
     console.log('✅ Stage AI: Content Generated Successfully');
@@ -167,6 +169,7 @@ export async function POST(req: Request) {
         runtime: isEdge ? 'edge' : 'node',
         env: process.env.NODE_ENV,
         diagnostics: {
+          hasDeepSeek: !!process.env.DEEPSEEK_API_KEY,
           hasGemini: !!process.env.GEMINI_API_KEY,
           hasGroq: !!process.env.GROQ_API_KEY,
           hasSupabase: !!process.env.NEXT_PUBLIC_SUPABASE_URL,

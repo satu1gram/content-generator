@@ -1,6 +1,6 @@
 export const runtime = 'edge';
 import { NextResponse } from 'next/server';
-import getGenAI, { GEMINI_MODEL } from '@/lib/gemini';
+import { GEMINI_MODEL } from '@/lib/gemini';
 
 const OPTIMIZE_PROMPT = `
 Kamu adalah Prompt Engineer ahli khusus untuk konten British Propolis (BP).
@@ -19,23 +19,96 @@ Hasil: "Berikan draf konten testimoni yang menyentuh tentang perjuangan seorang 
 Wajib balas HANYA dengan teks hasil optimasi, tanpa penjelasan tambahan.
 `;
 
+async function optimizeWithGemini(prompt: string): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY || '';
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
+
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      system_instruction: { parts: [{ text: OPTIMIZE_PROMPT }] },
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(`Gemini ${res.status}: ${err.error?.message || res.statusText}`);
+  }
+
+  const data = await res.json();
+  const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!text) throw new Error('Gemini returned empty content');
+  return text.trim();
+}
+
+async function optimizeWithDeepSeek(prompt: string): Promise<string> {
+  const apiKey = process.env.DEEPSEEK_API_KEY || '';
+  const res = await fetch('https://api.deepseek.com/v1/chat/completions', {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${apiKey}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'deepseek-chat',
+      messages: [
+        { role: 'system', content: OPTIMIZE_PROMPT },
+        { role: 'user', content: prompt },
+      ],
+      temperature: 0.7,
+      max_tokens: 1024,
+    }),
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(`DeepSeek ${res.status}: ${err.error?.message || res.statusText}`);
+  }
+
+  const data = await res.json();
+  const text = data.choices?.[0]?.message?.content;
+  if (!text) throw new Error('DeepSeek returned empty content');
+  return text.trim();
+}
+
 export async function POST(req: Request) {
   try {
-    if (!process.env.GEMINI_API_KEY) {
+    const hasDeepSeek = !!process.env.DEEPSEEK_API_KEY;
+    const hasGemini   = !!process.env.GEMINI_API_KEY;
+
+    if (!hasDeepSeek && !hasGemini) {
       return NextResponse.json({ error: 'API Key missing' }, { status: 500 });
     }
 
     const { prompt } = await req.json();
     if (!prompt) return NextResponse.json({ error: 'No prompt' }, { status: 400 });
 
-    const model = getGenAI().getGenerativeModel({
-      model: GEMINI_MODEL,
-      systemInstruction: OPTIMIZE_PROMPT,
-    });
+    let optimizedText: string | null = null;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const optimizedText = response.text().trim();
+    // Primary: DeepSeek
+    if (!optimizedText && hasDeepSeek) {
+      try {
+        optimizedText = await optimizeWithDeepSeek(prompt);
+      } catch (err: any) {
+        console.warn('⚠️ Optimize DeepSeek failed:', err.message);
+      }
+    }
+
+    // Fallback: Gemini
+    if (!optimizedText && hasGemini) {
+      try {
+        optimizedText = await optimizeWithGemini(prompt);
+      } catch (err: any) {
+        console.warn('⚠️ Optimize Gemini failed:', err.message);
+        throw err;
+      }
+    }
+
+    if (!optimizedText) {
+      return NextResponse.json({ error: 'Semua provider gagal mengoptimasi prompt.' }, { status: 500 });
+    }
 
     return NextResponse.json({ optimized: optimizedText });
   } catch (error: any) {

@@ -1,17 +1,8 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import productsData from './bp-knowledge.json';
-
-let _genAI: GoogleGenerativeAI | null = null;
-function getGenAI(): GoogleGenerativeAI {
-  if (_genAI) return _genAI;
-  const key = process.env.GEMINI_API_KEY || '';
-  _genAI = new GoogleGenerativeAI(key);
-  return _genAI;
-}
 
 export const MODELS = [
   "gemini-2.0-flash",
-  "gemini-2.0-flash-lite"
+  "gemini-2.0-flash-lite",
 ];
 
 export const GEMINI_MODEL = MODELS[0];
@@ -148,55 +139,54 @@ PANDUAN WARNA BRAND (DETIL):
 `;
 
 /**
- * 🚀 HELPER: Generate content with automatic retries and model fallback
+ * 🚀 HELPER: Generate content via raw fetch (edge-runtime compatible)
  */
-export async function generateWithFallback(prompt: string, retryCount = 0): Promise<any> {
+export async function generateWithFallback(prompt: string): Promise<any> {
+  const apiKey = process.env.GEMINI_API_KEY || '';
   let lastError: any = null;
-  
-  const genAI = getGenAI();
+
   for (const modelName of MODELS) {
     try {
-      const model = genAI.getGenerativeModel({
-        model: modelName,
-        systemInstruction: SYSTEM_PROMPT,
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json' },
+        }),
       });
 
-      const result = await model.generateContent({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        const status = res.status;
+        console.warn(`⚠️ Gemini ${modelName} HTTP ${status}:`, errData);
+
+        if (status === 404) { continue; }
+        if (status === 429 || status === 503) {
+          await new Promise(r => setTimeout(r, 5000));
+          continue;
         }
-      });
-      
-      return result;
+        throw new Error(`Gemini ${modelName} error ${status}: ${JSON.stringify(errData)}`);
+      }
+
+      const data = await res.json();
+      const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!text) throw new Error(`Gemini ${modelName} returned empty content`);
+
+      // Return in shape compatible with route.ts (.response.text())
+      return {
+        response: {
+          text: () => text,
+        },
+      };
     } catch (error: any) {
       lastError = error;
-      
-      // 404: Skip model permanently for this session
-      if (error.status === 404) {
-        console.warn(`⚠️ Model ${modelName} NOT FOUND (404). Skipping...`);
-        continue;
-      }
-      
-      // 429: Quota Exceeded - WAIT then try next or retry
-      if (error.status === 429 || error.status === 503) {
-        console.warn(`⚠️ Model ${modelName} BUSY/LIMIT (Status: ${error.status}). Waiting 5 seconds...`);
-        await new Promise(resolve => setTimeout(resolve, 5000));
-        continue;
-      }
-      
-      throw error;
+      console.warn(`⚠️ Gemini ${modelName} failed:`, error.message);
     }
-  }
-
-  // NUCLEAR FALLBACK: If Gemini fails, try Claude if key is present
-  if (process.env.ANTHROPIC_API_KEY) {
-    console.log('☢️ All Gemini models failed. Attempting Claude fallback...');
-    // Logika pemanggilan Claude bisa ditambahkan di sini jika SDK terpasang
-    // Untuk saat ini, kita tetap lempar error agar user tahu kuota habis
   }
 
   throw lastError;
 }
-
-export default getGenAI;

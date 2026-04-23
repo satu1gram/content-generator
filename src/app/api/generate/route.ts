@@ -44,14 +44,16 @@ export async function POST(req: Request) {
     // 2. Resilient Generation Chain: DeepSeek → Gemini → Groq
     let parsedData: any = null;
 
+    const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
+
     // ── Primary: DeepSeek ──────────────────────────────────────
     if (!parsedData && hasDeepSeek) {
       try {
         console.log('🤖 Attempting DeepSeek Generation...');
         parsedData = await generateWithDeepSeek(prompt, SYSTEM_PROMPT);
         console.log('✅ DeepSeek: Success');
-      } catch (err: any) {
-        console.warn('⚠️ DeepSeek Failed:', err.message);
+      } catch (err) {
+        console.warn('⚠️ DeepSeek Failed:', errMsg(err));
       }
     }
 
@@ -63,8 +65,8 @@ export async function POST(req: Request) {
         const content = result.response.text();
         if (content) parsedData = JSON.parse(content);
         console.log('✅ Gemini: Success');
-      } catch (err: any) {
-        console.warn('⚠️ Gemini Failed:', err.message);
+      } catch (err) {
+        console.warn('⚠️ Gemini Failed:', errMsg(err));
       }
     }
 
@@ -74,15 +76,14 @@ export async function POST(req: Request) {
         console.log('⚡ Attempting Groq Generation (Llama 3)...');
         parsedData = await generateWithGroq(prompt, SYSTEM_PROMPT);
         console.log('✅ Groq: Success');
-      } catch (err: any) {
-        console.error('❌ Groq Failed:', err.message);
-        throw new Error(`Kritikal: Semua AI Gagal. (${err.message})`);
+      } catch (err) {
+        console.error('❌ Groq Failed:', errMsg(err));
       }
     }
 
     if (!parsedData) {
       console.error('❌ Stage AI: No data returned from any provider');
-      throw new Error('Semua provider AI gagal menghasilkan konten.');
+      throw new Error('Semua provider AI gagal menghasilkan konten. Cek API keys dan quota.');
     }
     
     console.log('✅ Stage AI: Content Generated Successfully');
@@ -155,17 +156,19 @@ export async function POST(req: Request) {
     } catch (parseError: any) {
       console.error('Failed to normalize AI response:', parseError.message);
       return NextResponse.json(
-        { error: 'Failed to normalize AI response', details: parseError.message },
+        { error: 'Failed to normalize AI response', details: parseError instanceof Error ? parseError.message : String(parseError) },
         { status: 500 }
       );
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     const isEdge = process.env.NEXT_RUNTIME === 'edge';
-    console.error('API Error Stage:', error.stack || error.message);
+    const errMsg = error instanceof Error ? error.message : String(error);
+    const errStack = error instanceof Error ? error.stack : undefined;
+    console.error('API Error Stage:', errMsg);
     return NextResponse.json(
-      { 
-        error: error.message, 
-        stage: 'overall_process', 
+      {
+        error: errMsg,
+        stage: 'overall_process',
         runtime: isEdge ? 'edge' : 'node',
         env: process.env.NODE_ENV,
         diagnostics: {
@@ -174,8 +177,8 @@ export async function POST(req: Request) {
           hasGroq: !!process.env.GROQ_API_KEY,
           hasSupabase: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
         },
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
-      }, 
+        stack: process.env.NODE_ENV === 'development' ? errStack : undefined
+      },
       { status: 500 }
     );
   }

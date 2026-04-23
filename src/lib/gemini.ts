@@ -143,7 +143,7 @@ PANDUAN WARNA BRAND (DETIL):
  */
 export async function generateWithFallback(prompt: string): Promise<any> {
   const apiKey = process.env.GEMINI_API_KEY || '';
-  let lastError: any = null;
+  let lastError: Error = new Error('Gemini: semua model gagal atau tidak tersedia');
 
   for (const modelName of MODELS) {
     try {

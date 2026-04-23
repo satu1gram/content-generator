@@ -23,7 +23,7 @@ export async function generateWithGroq(prompt: string, systemPrompt: string): Pr
       ],
       response_format: { type: 'json_object' },
       temperature: 0.7,
-      max_tokens: 4096,
+      max_tokens: 8192,
     }),
   });
 

@@ -38,8 +38,20 @@ SKILL: MARKETING PSYCHOLOGY
 
 SKILL: SOCIAL CONTENT WRITING
 - Hasilkan 3 draf Script TikTok (durasi ~30 detik) dengan struktur Hook, Story, Soft Solution.
-- Hasilkan 1 draf IG Carousel (6-10 slide) dalam bentuk array of objects.
+- Hasilkan 1 draf IG Carousel dengan jumlah slide yang PROPORSIONAL terhadap panjang dan kompleksitas input:
+  * Input pendek (1-2 topik/poin): 3-4 slide
+  * Input sedang (3-5 topik/poin): 5-6 slide
+  * Input panjang/banyak poin/banyak fakta: 7 slide (maksimal)
+  * JANGAN batasi hanya 3 jika input panjang, tapi juga jangan melebihi 7 slide.
 - Hasilkan 2 draf Caption Instagram (Storytelling & Edukasi).
+
+STRATEGI HASHTAG (WAJIB RELEVAN & SPESIFIK):
+Hashtag HARUS mencerminkan 4 lapisan ini:
+1. PRODUK: Gunakan hashtag spesifik produk yang dibahas (contoh: #britishpropolis #bpgreen #bpblue #brassicpro #brassiceye #belgieskincare #steffipro)
+2. KOMUNITAS: Selalu sertakan hashtag komunitas (#quantummillionaire #mitraBP #resellerBP #bisnisBP)
+3. PAIN POINT: Buat hashtag dari masalah/keluhan utama yang ada di input (contoh jika input soal mata: #matalelah #rabaunkomputer #kesehatanmata)
+4. SOLUSI/MANFAAT: Hashtag dari manfaat produk yang relevan (contoh: #imunitasalami #kulitsehat #energitinggi)
+Format: minimal 3-5 hashtag, maksimal 5 hashtag, semua dalam Bahasa Indonesia atau bahasa yang dipakai di input. DILARANG menggunakan hashtag generik yang tidak relevan dengan isi konten.
 
 SKILL: VISUAL DESIGN VARIETY (WAJIB)
 
@@ -111,7 +123,7 @@ FORMAT OUTPUT WAJIB JSON:
   ],
   "caption_v1": "...",
   "caption_v2": "Caption Edukasi/Tips (Faktual, bermanfaat, inclusive tone 'Kita')",
-  "hashtag": "Generate 5-7 relevant hashtags based on the content topic, product category, pain points, and psychological motives. Make them engaging, trending, and specific to the audience's interests.",
+  "hashtag": "#britishpropolis #[hashtag_pain_point_dari_input] #[hashtag_spesifik_produk_atau_manfaat] #[hashtag_komunitas_jika_relevan] (3-5 hashtag saja, WAJIB relevan dengan isi input)",
   "waktu_posting": "Waktu terbaik posting hari ini",
   "rekomendasi_visual": "Saran visual/video background",
   "post_format": "feed|carousel|story|reels",

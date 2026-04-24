@@ -149,34 +149,22 @@ export async function generateWithFallback(prompt: string): Promise<any> {
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 25000);
-      let res: Response;
-      try {
-        res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            generationConfig: { responseMimeType: 'application/json' },
-          }),
-          signal: controller.signal,
-        });
-      } finally {
-        clearTimeout(timeout);
-      }
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          system_instruction: { parts: [{ text: SYSTEM_PROMPT }] },
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: { responseMimeType: 'application/json' },
+        }),
+      });
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         const status = res.status;
-        console.warn(`⚠️ Gemini ${modelName} HTTP ${status}:`, errData);
-
-        if (status === 404) { continue; }
-        if (status === 429 || status === 503) {
-          await new Promise(r => setTimeout(r, 5000));
-          continue;
-        }
+        console.warn(`⚠️ Gemini ${modelName} HTTP ${status}`);
+        // 429/503: langsung skip ke model berikutnya tanpa sleep
+        if (status === 404 || status === 429 || status === 503) { continue; }
         throw new Error(`Gemini ${modelName} error ${status}: ${JSON.stringify(errData)}`);
       }
 

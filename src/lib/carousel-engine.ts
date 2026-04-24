@@ -1,19 +1,19 @@
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
+// ⚠️ Supabase diimport secara DINAMIS di dalam fungsi agar tidak crash di Cloudflare edge runtime
 
 /**
- * Lazy Supabase Initializer
+ * Lazy Supabase Initializer — dynamic import, edge-safe
  */
-let _supabaseCache: SupabaseClient | null = null;
-const getSupabase = () => {
+let _supabaseCache: any | null = null;
+const getSupabase = async () => {
   if (_supabaseCache) return _supabaseCache;
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
-  
+
   if (!url || !key) {
-    console.error('❌ Supabase Config Missing: URL or Key is empty.');
     throw new Error('Supabase configuration missing');
   }
-  
+
+  const { createClient } = await import('@supabase/supabase-js');
   _supabaseCache = createClient(url, key);
   return _supabaseCache;
 };
@@ -446,7 +446,7 @@ export const generateCarouselImages = async (
   theme?: VisualTheme,
   branding?: CarouselBrandingSettings
 ): Promise<string[]> => {
-  const supabase = getSupabase();
+  const supabase = await getSupabase();
   const supabaseBucket = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || 'bp-images';
   const finalTheme: VisualTheme = theme || { primary: "#0A0F0D", accent: "#F59E0B", text: "#FFFFFF", decoration: "gold-glitter" };
   const finalBranding: CarouselBrandingSettings = branding || DEFAULT_BRANDING;

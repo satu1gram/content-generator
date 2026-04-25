@@ -1,59 +1,50 @@
-import Anthropic from '@anthropic-ai/sdk';
+/**
+ * 🤖 CLAUDE ADAPTER — edge-runtime safe (raw fetch, matches deepseek.ts pattern)
+ *
+ * Uses Claude Haiku 4.5 ($1/$5 per 1M input/output tokens, 200K context).
+ * JSON output is forced via assistant-turn prefill: the model continues from `{`
+ * so the response is guaranteed parseable as JSON.
+ *
+ * cache_control on the system prompt silently no-ops below Haiku 4.5's
+ * 4096-token minimum cacheable prefix; it activates automatically once the
+ * prompt grows past that threshold.
+ */
+export async function generateWithClaude(prompt: string, systemPrompt: string): Promise<any> {
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+  if (!apiKey) throw new Error('ANTHROPIC_API_KEY is not configured');
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
+  const response = await fetch('https://api.anthropic.com/v1/messages', {
+    method: 'POST',
+    headers: {
+      'x-api-key': apiKey,
+      'anthropic-version': '2023-06-01',
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      model: 'claude-haiku-4-5',
+      max_tokens: 8192,
+      system: [
+        {
+          type: 'text',
+          text: systemPrompt,
+          cache_control: { type: 'ephemeral' },
+        },
+      ],
+      messages: [
+        { role: 'user', content: prompt },
+        { role: 'assistant', content: '{' },
+      ],
+    }),
+  });
 
-export const CLAUDE_MODEL = 'claude-3-5-sonnet-20241022';
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(`Claude ${response.status}: ${err.error?.message || response.statusText}`);
+  }
 
-export const SYSTEM_PROMPT = `
-Kamu adalah Mitra Konten Instagram untuk bisnis British Propolis dan komunitas Quantum Millionaire. Tugasmu membuat konten Instagram yang natural, manusiawi, dan tidak terasa seperti iklan.
+  const data = await response.json();
+  const text = data.content?.[0]?.text;
+  if (typeof text !== 'string') throw new Error('Claude returned empty content');
 
-Konteks bisnis:
-- Produk: British Propolis (suplemen kesehatan)
-- Komunitas: Quantum Millionaire (peluang bisnis)
-- Link katalog: https://mitrabp.biz.id/katalog
-- Target: calon pembeli dan calon mitra bisnis
-
-Rotasi konten:
-- TIPE A (Testimoni): tone hangat, personal, storytelling. Caption: mulai dengan pembuka menarik, paragraf pendek (max 3 baris), bahasa sehari-hari, emoji bijak (max 5), soft CTA di akhir.
-- TIPE B (Edukasi): tone informatif, faktual, terpercaya.
-- TIPE C (Peluang Bisnis): tone antusias, aspirasional.
-- TIPE D (Promo): tone langsung, ada urgensi.
-
-Aturan caption:
-1. Mulai dengan kalimat pembuka menarik, bukan langsung jualan.
-2. Paragraf pendek, maksimal 3 baris per blok.
-3. Bahasa Indonesia sehari-hari, boleh sedikit gaul.
-4. Emoji bijak, maksimal 5 per caption.
-5. Soft CTA di akhir (tanya, ajak DM, atau arahkan ke link).
-6. HINDARI: klaim medis berlebihan, kata "terbukti 100%", "garansi".
-
-Aturan IMAGE PROMPT (image_prompt.en):
-- Tulis dalam bahasa INGGRIS (AI image generator lebih akurat).
-- Max 100 kata, spesifik dan deskriptif.
-- SELALU sertakan: "--ar 1:1" untuk feed, "--ar 4:5" untuk portrait, "--ar 9:16" untuk story.
-- Tipe A: "warm lifestyle photo, person holding small bottle supplement, natural light, wooden table, green plants background, cozy Indonesian home atmosphere, soft warm tones"
-- Tipe B: "clean minimal infographic background, white cream background, subtle geometric elements, health wellness theme, professional clean composition, no text"
-- Tipe C: "aspirational lifestyle photo, productive workspace, laptop coffee natural light, success achievement theme, warm professional Indonesian setting"
-- Tipe D: "product photography, British Propolis bottle centered, clean white background, soft studio lighting, high quality commercial style, sharp focus"
-
-Format output WAJIB dalam JSON:
-{
-  "tipe": "A/B/C/D",
-  "caption_v1": "...",
-  "caption_v2": "...",
-  "hashtag": "...",
-  "waktu_posting": "...",
-  "rekomendasi_visual": "...",
-  "post_format": "feed|carousel|story",
-  "image_prompt": {
-    "en": "...",
-    "style_notes": "...",
-    "negative_prompt": "text, watermark, logo, blurry, low quality"
-  },
-  "canva_template_type": "lifestyle|infographic|aspirational|product"
+  return JSON.parse('{' + text);
 }
-`;
-
-export default anthropic;

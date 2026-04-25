@@ -2,6 +2,7 @@ export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import { SYSTEM_PROMPT, generateWithFallback } from '@/lib/gemini';
 import { generateWithDeepSeek } from '@/lib/deepseek';
+import { generateWithClaude } from '@/lib/claude';
 // Groq disabled: free tier 12k TPM is too small for our SYSTEM_PROMPT + typical user input.
 // ⚠️ carousel-engine TIDAK diimport di module level — diimport dinamis di dalam handler
 // agar @supabase/supabase-js tidak crash Cloudflare Workers saat inisialisasi
@@ -13,10 +14,11 @@ export async function POST(req: Request) {
     // ── 1. Validasi Environment ────────────────────────────────
     const hasDeepSeek = !!process.env.DEEPSEEK_API_KEY;
     const hasGemini   = !!process.env.GEMINI_API_KEY;
+    const hasClaude   = !!process.env.ANTHROPIC_API_KEY;
 
-    if (!hasDeepSeek && !hasGemini) {
+    if (!hasDeepSeek && !hasGemini && !hasClaude) {
       return NextResponse.json(
-        { error: 'Tidak ada API Key AI yang terpasang (DeepSeek / Gemini).' },
+        { error: 'Tidak ada API Key AI yang terpasang (DeepSeek / Gemini / Claude).' },
         { status: 500 }
       );
     }
@@ -43,6 +45,9 @@ export async function POST(req: Request) {
         name: 'Gemini',
         promise: generateWithFallback(prompt).then(r => JSON.parse(r.response.text())),
       });
+    }
+    if (hasClaude) {
+      providers.push({ name: 'Claude', promise: generateWithClaude(prompt, SYSTEM_PROMPT) });
     }
 
     // Wrap each provider so we can attribute failures by name even after Promise.any
@@ -147,6 +152,7 @@ export async function POST(req: Request) {
         diagnostics: {
           hasDeepSeek: !!process.env.DEEPSEEK_API_KEY,
           hasGemini: !!process.env.GEMINI_API_KEY,
+          hasClaude: !!process.env.ANTHROPIC_API_KEY,
           hasSupabase: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
         },
       },

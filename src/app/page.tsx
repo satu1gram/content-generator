@@ -80,8 +80,12 @@ export default function RootCreatePage() {
           brandingSettings: branding,
         }),
       });
-      if (!res.ok) throw new Error('Failed to generate content');
-      const data = await res.json();
+      const data = await res.json().catch(() => null);
+      if (!res.ok) {
+        const serverMsg = data?.error || `Generate failed (HTTP ${res.status})`;
+        const providerMsgs: string[] = Array.isArray(data?.providerErrors) ? data.providerErrors : [];
+        throw new Error(providerMsgs.length ? `${serverMsg} — ${providerMsgs.join(' | ')}` : serverMsg);
+      }
       sessionStorage.setItem('pending_content', JSON.stringify({
         original_text: inputText,
         generated: data

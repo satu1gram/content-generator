@@ -34,28 +34,42 @@ export async function POST(req: Request) {
 
     // ── 3. AI Generation — semua provider jalan PARALEL ────────
     // Promise.any() ambil hasil pertama yang berhasil
-    const providers: Promise<any>[] = [];
+    const providers: { name: string; promise: Promise<any> }[] = [];
 
     if (hasDeepSeek) {
-      providers.push(generateWithDeepSeek(prompt, SYSTEM_PROMPT));
+      providers.push({ name: 'DeepSeek', promise: generateWithDeepSeek(prompt, SYSTEM_PROMPT) });
     }
     if (hasGemini) {
-      providers.push(
-        generateWithFallback(prompt).then(r => JSON.parse(r.response.text()))
-      );
+      providers.push({
+        name: 'Gemini',
+        promise: generateWithFallback(prompt).then(r => JSON.parse(r.response.text())),
+      });
     }
     if (hasGroq) {
-      providers.push(generateWithGroq(prompt, SYSTEM_PROMPT));
+      providers.push({ name: 'Groq', promise: generateWithGroq(prompt, SYSTEM_PROMPT) });
     }
+
+    // Wrap each provider so we can attribute failures by name even after Promise.any
+    const tagged = providers.map(p =>
+      p.promise.catch((e: unknown) => { throw new Error(`${p.name}: ${errMsg(e)}`); })
+    );
 
     let parsedData: any;
     try {
-      parsedData = await Promise.any(providers);
+      parsedData = await Promise.any(tagged);
       console.log('✅ AI generation success');
-    } catch (aggErr) {
-      console.error('❌ All AI providers failed:', aggErr);
+    } catch (aggErr: any) {
+      // AggregateError.errors[] holds the actual per-provider failures —
+      // unwrap them so logs and the client both see what really broke.
+      const innerErrors: string[] = Array.isArray(aggErr?.errors)
+        ? aggErr.errors.map((e: unknown) => errMsg(e))
+        : [errMsg(aggErr)];
+      innerErrors.forEach(m => console.error('❌ Provider failed:', m));
       return NextResponse.json(
-        { error: 'Semua provider AI gagal. Cek API keys dan quota.' },
+        {
+          error: 'Semua provider AI gagal. Cek API keys dan quota.',
+          providerErrors: innerErrors,
+        },
         { status: 500 }
       );
     }

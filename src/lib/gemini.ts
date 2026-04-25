@@ -143,7 +143,7 @@ PANDUAN WARNA BRAND (DETIL):
  */
 export async function generateWithFallback(prompt: string): Promise<any> {
   const apiKey = process.env.GEMINI_API_KEY || '';
-  let lastError: Error = new Error('Gemini: semua model gagal atau tidak tersedia');
+  const modelErrors: string[] = [];
 
   for (const modelName of MODELS) {
     try {
@@ -162,15 +162,18 @@ export async function generateWithFallback(prompt: string): Promise<any> {
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
         const status = res.status;
-        console.warn(`⚠️ Gemini ${modelName} HTTP ${status}`);
-        // 429/503: langsung skip ke model berikutnya tanpa sleep
-        if (status === 404 || status === 429 || status === 503) { continue; }
-        throw new Error(`Gemini ${modelName} error ${status}: ${JSON.stringify(errData)}`);
+        const detail = errData?.error?.message || JSON.stringify(errData).slice(0, 180);
+        const summary = `${modelName} HTTP ${status}: ${detail}`;
+        modelErrors.push(summary);
+        console.warn(`⚠️ Gemini ${summary}`);
+        // 429/503/404: skip to next model — but keep the error so caller can see it
+        if (status === 404 || status === 429 || status === 503) continue;
+        throw new Error(summary);
       }
 
       const data = await res.json();
       const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-      if (!text) throw new Error(`Gemini ${modelName} returned empty content`);
+      if (!text) throw new Error(`${modelName} returned empty content`);
 
       // Return in shape compatible with route.ts (.response.text())
       return {
@@ -179,10 +182,10 @@ export async function generateWithFallback(prompt: string): Promise<any> {
         },
       };
     } catch (error: any) {
-      lastError = error;
+      modelErrors.push(`${modelName} threw: ${error.message}`);
       console.warn(`⚠️ Gemini ${modelName} failed:`, error.message);
     }
   }
 
-  throw lastError;
+  throw new Error(modelErrors.length ? modelErrors.join(' | ') : 'all Gemini models unavailable');
 }

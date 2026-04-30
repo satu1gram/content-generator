@@ -1,9 +1,6 @@
 export const runtime = 'edge';
 import { NextResponse } from 'next/server';
 import { SYSTEM_PROMPT, generateWithFallback } from '@/lib/gemini';
-import { generateWithDeepSeek } from '@/lib/deepseek';
-import { generateWithClaude } from '@/lib/claude';
-// Groq disabled: free tier 12k TPM is too small for our SYSTEM_PROMPT + typical user input.
 // ⚠️ carousel-engine TIDAK diimport di module level — diimport dinamis di dalam handler
 // agar @supabase/supabase-js tidak crash Cloudflare Workers saat inisialisasi
 
@@ -12,13 +9,11 @@ const errMsg = (e: unknown) => (e instanceof Error ? e.message : String(e));
 export async function POST(req: Request) {
   try {
     // ── 1. Validasi Environment ────────────────────────────────
-    const hasDeepSeek = !!process.env.DEEPSEEK_API_KEY;
-    const hasGemini   = !!process.env.GEMINI_API_KEY;
-    const hasClaude   = !!process.env.ANTHROPIC_API_KEY;
+    const hasGemini = !!process.env.GEMINI_API_KEY;
 
-    if (!hasDeepSeek && !hasGemini && !hasClaude) {
+    if (!hasGemini) {
       return NextResponse.json(
-        { error: 'Tidak ada API Key AI yang terpasang (DeepSeek / Gemini / Claude).' },
+        { error: 'GEMINI_API_KEY tidak terpasang.' },
         { status: 500 }
       );
     }
@@ -33,44 +28,17 @@ export async function POST(req: Request) {
 
     console.log('🏁 Generate:', prompt.slice(0, 60));
 
-    // ── 3. AI Generation — semua provider jalan PARALEL ────────
-    // Promise.any() ambil hasil pertama yang berhasil
-    const providers: { name: string; promise: Promise<any> }[] = [];
-
-    if (hasDeepSeek) {
-      providers.push({ name: 'DeepSeek', promise: generateWithDeepSeek(prompt, SYSTEM_PROMPT) });
-    }
-    if (hasGemini) {
-      providers.push({
-        name: 'Gemini',
-        promise: generateWithFallback(prompt).then(r => JSON.parse(r.response.text())),
-      });
-    }
-    if (hasClaude) {
-      providers.push({ name: 'Claude', promise: generateWithClaude(prompt, SYSTEM_PROMPT) });
-    }
-
-    // Wrap each provider so we can attribute failures by name even after Promise.any
-    const tagged = providers.map(p =>
-      p.promise.catch((e: unknown) => { throw new Error(`${p.name}: ${errMsg(e)}`); })
-    );
-
+    // ── 3. AI Generation ───────────────────────────────────────
     let parsedData: any;
     try {
-      parsedData = await Promise.any(tagged);
+      const result = await generateWithFallback(prompt);
+      parsedData = JSON.parse(result.response.text());
       console.log('✅ AI generation success');
-    } catch (aggErr: any) {
-      // AggregateError.errors[] holds the actual per-provider failures —
-      // unwrap them so logs and the client both see what really broke.
-      const innerErrors: string[] = Array.isArray(aggErr?.errors)
-        ? aggErr.errors.map((e: unknown) => errMsg(e))
-        : [errMsg(aggErr)];
-      innerErrors.forEach(m => console.error('❌ Provider failed:', m));
+    } catch (err: unknown) {
+      const msg = errMsg(err);
+      console.error('❌ Gemini failed:', msg);
       return NextResponse.json(
-        {
-          error: 'Semua provider AI gagal. Cek API keys dan quota.',
-          providerErrors: innerErrors,
-        },
+        { error: 'Gemini gagal generate konten.', providerErrors: [msg] },
         { status: 500 }
       );
     }
@@ -109,7 +77,6 @@ export async function POST(req: Request) {
 
     // Fallback slides jika AI tidak menghasilkan array carousel
     if (normalizedData.carousel_slides.length === 0) {
-      // inline fallback — tidak import carousel-engine dulu
       const sentences = (normalizedData.caption_v1 || '')
         .split(/[.!?]/)
         .filter((s: string) => s.trim().length > 10)
@@ -125,7 +92,6 @@ export async function POST(req: Request) {
     let imageUrls: string[] = [];
     try {
       console.log('🎨 Starting carousel image generation...');
-      // Dynamic import — Supabase tidak crash Workers di module level
       const { generateCarouselImages } = await import('@/lib/carousel-engine');
       const result = await generateCarouselImages(
         normalizedData.carousel_slides,
@@ -137,7 +103,6 @@ export async function POST(req: Request) {
         console.log(`✅ ${imageUrls.length} carousel images generated`);
       }
     } catch (imgErr) {
-      // Carousel image gagal tidak boleh gagalkan seluruh request
       console.error('⚠️ Carousel image generation failed (non-fatal):', errMsg(imgErr));
     }
 
@@ -150,9 +115,7 @@ export async function POST(req: Request) {
       {
         error: msg,
         diagnostics: {
-          hasDeepSeek: !!process.env.DEEPSEEK_API_KEY,
           hasGemini: !!process.env.GEMINI_API_KEY,
-          hasClaude: !!process.env.ANTHROPIC_API_KEY,
           hasSupabase: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
         },
       },

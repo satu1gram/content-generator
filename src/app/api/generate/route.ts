@@ -90,6 +90,14 @@ export async function POST(req: Request) {
 
     // ── 5. Generate Carousel Images (dinamis, tidak crash jika gagal) ──
     let imageUrls: string[] = [];
+    let imageGenerationError: string | null = null;
+    const imageDiagnostics = {
+      hasBrowserless: !!process.env.BROWSERLESS_TOKEN,
+      hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+      hasSupabaseKey: !!(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
+      hasPexels: !!process.env.PEXELS_API_KEY,
+    };
+
     try {
       console.log('🎨 Starting carousel image generation...');
       const { generateCarouselImages } = await import('@/lib/carousel-engine');
@@ -102,11 +110,27 @@ export async function POST(req: Request) {
         imageUrls = result;
         console.log(`✅ ${imageUrls.length} carousel images generated`);
       }
+      if (imageUrls.length === 0) {
+        const missing: string[] = [];
+        if (!imageDiagnostics.hasBrowserless) missing.push('BROWSERLESS_TOKEN');
+        if (!imageDiagnostics.hasSupabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL');
+        if (!imageDiagnostics.hasSupabaseKey) missing.push('SUPABASE_SERVICE_ROLE_KEY (atau ANON_KEY)');
+        imageGenerationError = missing.length
+          ? `Env vars hilang: ${missing.join(', ')}`
+          : 'Carousel engine returned empty array — cek log Cloudflare untuk detail upload/render.';
+      }
     } catch (imgErr) {
-      console.error('⚠️ Carousel image generation failed (non-fatal):', errMsg(imgErr));
+      const msg = errMsg(imgErr);
+      console.error('⚠️ Carousel image generation failed (non-fatal):', msg);
+      imageGenerationError = msg;
     }
 
-    return NextResponse.json({ ...normalizedData, generated_images: imageUrls });
+    return NextResponse.json({
+      ...normalizedData,
+      generated_images: imageUrls,
+      image_generation_error: imageGenerationError,
+      image_diagnostics: imageDiagnostics,
+    });
 
   } catch (error: unknown) {
     const msg = errMsg(error);

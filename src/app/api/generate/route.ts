@@ -92,7 +92,7 @@ export async function POST(req: Request) {
     let imageUrls: string[] = [];
     let imageGenerationError: string | null = null;
     const imageDiagnostics = {
-      hasBrowserless: !!process.env.BROWSERLESS_TOKEN,
+      hasScreenshotService: !!process.env.SCREENSHOT_SERVICE_URL,
       hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
       hasSupabaseKey: !!(process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY),
       hasPexels: !!process.env.PEXELS_API_KEY,
@@ -112,7 +112,7 @@ export async function POST(req: Request) {
       }
       if (imageUrls.length === 0) {
         const missing: string[] = [];
-        if (!imageDiagnostics.hasBrowserless) missing.push('BROWSERLESS_TOKEN');
+        if (!imageDiagnostics.hasScreenshotService) missing.push('SCREENSHOT_SERVICE_URL');
         if (!imageDiagnostics.hasSupabaseUrl) missing.push('NEXT_PUBLIC_SUPABASE_URL');
         if (!imageDiagnostics.hasSupabaseKey) missing.push('SUPABASE_SERVICE_ROLE_KEY (atau ANON_KEY)');
         imageGenerationError = missing.length

@@ -409,13 +409,16 @@ const layoutRenderers: Record<LayoutType, LayoutRenderer> = {
 };
 
 /**
- * 🌐 REST: Browserless Screenshot (Edge Compatible)
+ * 🌐 REST: Cloud Run Screenshot Service (Edge Compatible)
+ * Replaces Browserless — same request format, self-hosted on GCP.
  */
 const generateViaBrowserlessRest = async (
-  html: string,
-  token: string
+  html: string
 ): Promise<Uint8Array> => {
-  const response = await fetch(`https://chrome.browserless.io/screenshot?token=${token}`, {
+  const serviceUrl = process.env.SCREENSHOT_SERVICE_URL;
+  if (!serviceUrl) throw new Error('SCREENSHOT_SERVICE_URL not configured');
+
+  const response = await fetch(`${serviceUrl}/screenshot`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
@@ -431,7 +434,7 @@ const generateViaBrowserlessRest = async (
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`❌ Browserless REST Failed: ${errorText}`);
+    throw new Error(`Screenshot service failed: ${errorText}`);
   }
 
   const arrayBuffer = await response.arrayBuffer();
@@ -458,9 +461,8 @@ export const generateCarouselImages = async (
 
   console.log(`🎨 Branding Applied: ${finalTheme.decoration.toUpperCase()} | Handle: ${finalBranding.handle} | Uploading to ${folderPath}...`);
 
-  const token = process.env.BROWSERLESS_TOKEN;
-  if (!token) {
-    console.warn('⚠️ BROWSERLESS_TOKEN missing — skipping carousel image generation.');
+  if (!process.env.SCREENSHOT_SERVICE_URL) {
+    console.warn('⚠️ SCREENSHOT_SERVICE_URL missing — skipping carousel image generation.');
     return [];
   }
 
@@ -480,7 +482,7 @@ export const generateCarouselImages = async (
       const html = renderer(slide, resolvedTheme, design, i, slides.length, imageUrl, finalBranding);
 
       console.log(`🌐 Rendering Slide ${i+1}/${slides.length} [${design.layout}/${design.mood}] via Browserless...`);
-      const buffer = await generateViaBrowserlessRest(html, token);
+      const buffer = await generateViaBrowserlessRest(html);
 
       const fullPath = `${folderPath}/slide_${i + 1}.png`;
       console.log(`📤 Uploading Slide ${i+1} to Supabase: ${fullPath}...`);

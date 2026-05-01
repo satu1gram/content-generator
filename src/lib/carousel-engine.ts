@@ -122,23 +122,30 @@ const VALID_LAYOUTS: LayoutType[] = [
 ];
 const VALID_MOODS: MoodType[] = ['PREMIUM_DARK', 'LIGHT_AIRY', 'ACCENT_DOMINANT'];
 
+const THEME_DECORATION_NAMES = ['gold-glitter', 'violet-mist', 'soft-glow'];
+
 const normalizeDesign = (design: any): SlideDesign => ({
   layout: VALID_LAYOUTS.includes(design?.layout) ? design.layout : 'SPLIT_IMAGE_TEXT',
   mood: VALID_MOODS.includes(design?.mood) ? design.mood : 'PREMIUM_DARK',
   emphasis_word: design?.emphasis_word || '',
-  decoration: design?.decoration || '',
+  // Strip theme decoration names that Gemini puts here by mistake (gold-glitter etc.)
+  decoration: (design?.decoration && !THEME_DECORATION_NAMES.includes((design.decoration || '').toLowerCase()))
+    ? design.decoration : '',
   stat_value: design?.stat_value || null,
 });
 
 function resolveThemeByMood(baseTheme: VisualTheme, mood: MoodType): VisualTheme {
   switch (mood) {
     case 'LIGHT_AIRY':
-      return { primary: '#FAF9F6', accent: baseTheme.accent, text: '#1C1C1E', decoration: 'soft-glow' };
+      // Warm cream — editorial, approachable
+      return { primary: '#F7F6F2', accent: baseTheme.accent, text: '#1C1C1E', decoration: baseTheme.decoration };
     case 'ACCENT_DOMINANT':
+      // Brand accent as background — bold, punchy colour slide
       return { primary: baseTheme.accent, accent: '#FFFFFF', text: '#FFFFFF', decoration: baseTheme.decoration };
     case 'PREMIUM_DARK':
     default:
-      return baseTheme;
+      // White premium editorial — crisp, clean, not black
+      return { primary: '#FFFFFF', accent: baseTheme.accent, text: '#1C1C1E', decoration: baseTheme.decoration };
   }
 }
 
@@ -451,7 +458,7 @@ export const generateCarouselImages = async (
 ): Promise<string[]> => {
   const supabase = await getSupabase();
   const supabaseBucket = process.env.NEXT_PUBLIC_SUPABASE_STORAGE_BUCKET || 'bp-images';
-  const finalTheme: VisualTheme = theme || { primary: "#0A0F0D", accent: "#F59E0B", text: "#FFFFFF", decoration: "gold-glitter" };
+  const finalTheme: VisualTheme = theme || { primary: '#FFFFFF', accent: '#F59E0B', text: '#1C1C1E', decoration: 'gold-glitter' };
   const finalBranding: CarouselBrandingSettings = branding || DEFAULT_BRANDING;
 
   const sessionId = crypto.randomUUID().slice(0, 8);

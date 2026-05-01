@@ -198,7 +198,8 @@ const FONT_IMPORT = `@import url('https://fonts.googleapis.com/css2?family=DM+Sa
 
 const baseStyles = (theme: VisualTheme) => `
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { margin: 0; width: 1080px; height: 1080px; font-family: 'DM Sans', sans-serif; overflow: hidden; background: ${theme.primary}; color: ${theme.text}; }
+  html { width: 1080px; height: 1080px; overflow: hidden; }
+  body { margin: 0; width: 1080px; height: 1080px; max-width: 1080px; max-height: 1080px; font-family: 'DM Sans', sans-serif; overflow: hidden; background: ${theme.primary}; color: ${theme.text}; }
 `;
 
 function highlightTitle(title: string, emphasisWord: string, accentColor: string): string {
@@ -217,11 +218,11 @@ function renderHeroTypographic(
 ): string {
   const titled = highlightTitle(slide.title, design.emphasis_word || '', theme.accent);
   return `<!DOCTYPE html><html><head><style>${FONT_IMPORT}${baseStyles(theme)}
-    .slide { width: 1080px; height: 1080px; position: relative; padding: 100px 80px; display: flex; flex-direction: column; justify-content: center; }
+    .slide { width: 1080px; height: 1080px; position: relative; padding: 100px 80px; display: flex; flex-direction: column; justify-content: center; overflow: hidden; }
     .decoration { font-size: 12px; letter-spacing: 0.35em; opacity: 0.45; margin-bottom: 40px; text-transform: uppercase; color: ${theme.accent}; }
-    .hero-title { font-family: 'Playfair Display', serif; font-size: 128px; line-height: 0.95; font-weight: 700; letter-spacing: -0.03em; max-width: 900px; }
-    .body-text { font-size: 28px; margin-top: 40px; opacity: 0.7; max-width: 680px; line-height: 1.5; }
-    .accent-line { width: 60px; height: 3px; background: ${theme.accent}; margin-bottom: 48px; }
+    .hero-title { font-family: 'Playfair Display', serif; font-size: 96px; line-height: 1.0; font-weight: 700; letter-spacing: -0.03em; max-width: 880px; overflow-wrap: break-word; }
+    .body-text { font-size: 26px; margin-top: 36px; opacity: 0.7; max-width: 680px; line-height: 1.55; }
+    .accent-line { width: 60px; height: 3px; background: ${theme.accent}; margin-bottom: 48px; flex-shrink: 0; }
   </style></head><body>
     <div class="slide">
       <div class="accent-line"></div>
@@ -251,7 +252,7 @@ function renderSplitImageText(
     : `linear-gradient(to right, rgba(10,15,13,0.95) 0%, rgba(10,15,13,0.8) 45%, rgba(10,15,13,0) 100%)`;
 
   return `<!DOCTYPE html><html><head><style>${FONT_IMPORT}${baseStyles(theme)}
-    .slide { width: 1080px; height: 1080px; position: relative; display: flex; flex-direction: ${isAlt ? 'row-reverse' : 'row'}; }
+    .slide { width: 1080px; height: 1080px; position: relative; display: flex; flex-direction: ${isAlt ? 'row-reverse' : 'row'}; overflow: hidden; }
     .img-section { width: 540px; height: 100%; overflow: hidden; flex-shrink: 0; }
     .img-section img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.88); }
     .content { flex: 1; height: 100%; position: relative; display: flex; flex-direction: column; justify-content: center; padding: 80px; z-index: 10; text-align: ${isAlt ? 'right' : 'left'}; }
@@ -286,7 +287,7 @@ function renderFullBleedImage(
   const titled = highlightTitle(slide.title, design.emphasis_word || '', theme.accent);
   const bg = imageUrl ? `url('${imageUrl}') center/cover no-repeat` : theme.primary;
   return `<!DOCTYPE html><html><head><style>${FONT_IMPORT}${baseStyles(theme)}
-    .slide { width: 1080px; height: 1080px; position: relative; background: ${bg}; }
+    .slide { width: 1080px; height: 1080px; position: relative; background: ${bg}; overflow: hidden; }
     .overlay { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, rgba(0,0,0,0.3) 55%, transparent 100%); }
     .content { position: absolute; bottom: 80px; left: 80px; right: 80px; z-index: 10; color: #fff; }
     .decoration { font-size: 11px; letter-spacing: 0.4em; opacity: 0.55; margin-bottom: 24px; text-transform: uppercase; color: ${theme.accent}; }
@@ -317,7 +318,7 @@ function renderMinimalQuote(
 ): string {
   const titled = highlightTitle(slide.title, design.emphasis_word || '', theme.accent);
   return `<!DOCTYPE html><html><head><style>${FONT_IMPORT}${baseStyles(theme)}
-    .slide { width: 1080px; height: 1080px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 120px; text-align: center; }
+    .slide { width: 1080px; height: 1080px; position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 120px; text-align: center; overflow: hidden; }
     .decoration { font-size: 11px; letter-spacing: 0.4em; opacity: 0.4; margin-bottom: 60px; text-transform: uppercase; color: ${theme.accent}; }
     h1 { font-family: 'Playfair Display', serif; font-size: 72px; font-weight: 500; line-height: 1.15; max-width: 780px; letter-spacing: -0.02em; }
     .divider { width: 40px; height: 2px; background: ${theme.accent}; margin: 40px auto; }
@@ -345,7 +346,7 @@ function renderMagazineEditorial(
 ): string {
   const titled = highlightTitle(slide.title, design.emphasis_word || '', theme.accent);
   return `<!DOCTYPE html><html><head><style>${FONT_IMPORT}${baseStyles(theme)}
-    .slide { width: 1080px; height: 1080px; position: relative; padding: 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .slide { width: 1080px; height: 1080px; position: relative; padding: 80px; display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; overflow: hidden; }
     .left { padding-top: 40px; }
     .subhead { font-size: 13px; letter-spacing: 0.3em; margin-bottom: 24px; color: ${theme.accent}; text-transform: uppercase; }
     .pull-quote { font-family: 'Playfair Display', serif; font-size: 62px; font-style: italic; line-height: 1.1; border-left: 4px solid ${theme.accent}; padding-left: 28px; }
@@ -379,7 +380,7 @@ function renderStatHighlight(
   const statVal = design.stat_value || '';
   const statFontSize = statVal.length <= 3 ? '320px' : statVal.length <= 5 ? '240px' : '180px';
   return `<!DOCTYPE html><html><head><style>${FONT_IMPORT}${baseStyles(theme)}
-    .slide { width: 1080px; height: 1080px; position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 80px; text-align: center; }
+    .slide { width: 1080px; height: 1080px; position: relative; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 80px; text-align: center; overflow: hidden; }
     .decoration { font-size: 12px; letter-spacing: 0.4em; margin-bottom: 32px; opacity: 0.55; text-transform: uppercase; color: ${theme.accent}; }
     .stat-value { font-family: 'Playfair Display', serif; font-size: ${statFontSize}; line-height: 0.85; font-weight: 700; color: ${theme.accent}; letter-spacing: -0.04em; }
     .stat-label { font-size: 34px; margin-top: 40px; font-weight: 700; letter-spacing: -0.01em; }

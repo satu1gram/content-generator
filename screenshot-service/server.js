@@ -16,6 +16,7 @@ async function getBrowser() {
       '--disable-dev-shm-usage',
       '--disable-gpu',
       '--single-process',
+      '--force-device-scale-factor=1',
     ],
     headless: true,
   });
@@ -48,9 +49,16 @@ const server = createServer(async (req, res) => {
       const b    = await getBrowser();
       const page = await b.newPage();
       await page.setViewport({ width, height, deviceScaleFactor: 1 });
-      await page.setContent(html, { waitUntil: 'networkidle0', timeout: 30000 });
+      // 'load' fires faster than 'networkidle0'; then wait for fonts via Web Font API
+      await page.setContent(html, { waitUntil: 'load', timeout: 30000 });
+      await page.evaluate(() => document.fonts.ready).catch(() => {});
 
-      const screenshot = await page.screenshot({ type: 'png', clip });
+      const screenshot = await page.screenshot({
+        type: 'png',
+        clip: { x: 0, y: 0, width, height },
+        fullPage: false,
+        captureBeyondViewport: false,
+      });
       await page.close();
 
       res.writeHead(200, { 'Content-Type': 'image/png' });

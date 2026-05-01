@@ -110,6 +110,24 @@ export default function ReviewPage() {
           <section className="space-y-8 pt-4">
             <h2 className="text-xl font-serif text-[#1C1C1E] border-l-4 border-[#00A896] pl-4">Visual & Copy Presentation</h2>
             
+            {data.image_generation_error && (
+              <div className="rounded-2xl border border-amber-300 bg-amber-50 p-5 text-[13px] text-amber-900">
+                <div className="font-bold uppercase tracking-[0.15em] text-[11px] mb-2 text-amber-700">⚠ Carousel Image Generation Failed</div>
+                <div className="font-mono text-[12px] whitespace-pre-wrap">{data.image_generation_error}</div>
+                {data.image_diagnostics && (
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-[11px] font-mono">
+                    <div>SCREENSHOT_SERVICE: {data.image_diagnostics.hasScreenshotService ? '✅' : '❌'}</div>
+                    <div>SUPABASE_URL: {data.image_diagnostics.hasSupabaseUrl ? '✅' : '❌'}</div>
+                    <div>SUPABASE_KEY: {data.image_diagnostics.hasSupabaseKey ? '✅' : '❌'}</div>
+                    <div>PEXELS: {data.image_diagnostics.hasPexels ? '✅' : '❌'}</div>
+                  </div>
+                )}
+                <div className="mt-3 text-[11px] text-amber-700">
+                  Run <a href="/api/debug-screenshot" target="_blank" className="underline font-bold">/api/debug-screenshot</a> for full pipeline diagnostics.
+                </div>
+              </div>
+            )}
+
             <ImagePreview image_url={selectedImage} data={data} />
 
             <div className="space-y-8 mt-10">

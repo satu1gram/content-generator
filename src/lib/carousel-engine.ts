@@ -462,9 +462,10 @@ export const generateCarouselImages = async (
   console.log(`🎨 Branding Applied: ${finalTheme.decoration.toUpperCase()} | Handle: ${finalBranding.handle} | Uploading to ${folderPath}...`);
 
   if (!process.env.SCREENSHOT_SERVICE_URL) {
-    console.warn('⚠️ SCREENSHOT_SERVICE_URL missing — skipping carousel image generation.');
-    return [];
+    throw new Error('SCREENSHOT_SERVICE_URL not configured');
   }
+
+  const slideErrors: string[] = [];
 
   for (let i = 0; i < slides.length; i++) {
     try {
@@ -481,7 +482,7 @@ export const generateCarouselImages = async (
       const renderer = layoutRenderers[design.layout] || layoutRenderers['SPLIT_IMAGE_TEXT'];
       const html = renderer(slide, resolvedTheme, design, i, slides.length, imageUrl, finalBranding);
 
-      console.log(`🌐 Rendering Slide ${i+1}/${slides.length} [${design.layout}/${design.mood}] via Browserless...`);
+      console.log(`🌐 Rendering Slide ${i+1}/${slides.length} [${design.layout}/${design.mood}]...`);
       const buffer = await generateViaBrowserlessRest(html);
 
       const fullPath = `${folderPath}/slide_${i + 1}.png`;
@@ -490,7 +491,9 @@ export const generateCarouselImages = async (
       const { error: uploadError } = await supabase.storage.from(supabaseBucket).upload(fullPath, buffer, { contentType: 'image/png', upsert: true });
 
       if (uploadError) {
-        console.error(`❌ Upload failed for Slide ${i+1}:`, uploadError);
+        const msg = `Slide ${i+1} upload failed: ${uploadError.message}`;
+        console.error(`❌ ${msg}`);
+        slideErrors.push(msg);
         continue;
       }
 
@@ -499,9 +502,16 @@ export const generateCarouselImages = async (
         publicUrls.push(data.publicUrl);
         console.log(`✅ Slide ${i+1} Ready: ${data.publicUrl}`);
       }
-    } catch (err) {
-      console.error(`❌ Slide ${i+1} failed:`, err);
+    } catch (err: any) {
+      const msg = `Slide ${i+1} failed: ${err?.message || String(err)}`;
+      console.error(`❌ ${msg}`);
+      slideErrors.push(msg);
     }
+  }
+
+  // If every slide failed, throw the collected errors so the caller surfaces them.
+  if (publicUrls.length === 0 && slideErrors.length > 0) {
+    throw new Error(slideErrors.join(' | '));
   }
   return publicUrls;
 };

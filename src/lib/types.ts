@@ -33,6 +33,13 @@ export interface ClaudeOutput {
   };
   canva_template_type: CanvaTemplateType;
   generated_images?: string[];
+  image_generation_error?: string | null;
+  image_diagnostics?: {
+    hasScreenshotService: boolean;
+    hasSupabaseUrl: boolean;
+    hasSupabaseKey: boolean;
+    hasPexels: boolean;
+  };
   visual_theme?: {
     primary: string;
     accent: string;
